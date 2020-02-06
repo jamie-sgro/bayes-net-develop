@@ -1,7 +1,7 @@
 #Set Parameters
 subData = F
 standalone = F
-localhost = T
+localhost = F
 
 checkPackage = function(pack) {
   if (!is.element(pack, installed.packages()[,1])) {
@@ -11,20 +11,13 @@ checkPackage = function(pack) {
 }
 
 #Import Libraries
-checkPackage("htmlwidgets")
-library(htmlwidgets)
-checkPackage("shiny")
-library(shiny)
-checkPackage("visNetwork")
-library(visNetwork)
-checkPackage("shinydashboard")
-library(shinydashboard)
-checkPackage("rhandsontable")
-library(rhandsontable)
-checkPackage("bnlearn")
-library(bnlearn)
-checkPackage("LearnBayes")
-library(LearnBayes)
+packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
+             "rhandsontable", "bnlearn", "LearnBayes")
+
+for (package in packList) {
+  checkPackage(package)
+  library(package)
+}
 
 
 
