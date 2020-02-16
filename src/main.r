@@ -763,8 +763,8 @@ if (localhost) {
   ip = "127.0.0.1"
 } else {
   ipconfig = system("ipconfig", intern=TRUE)
-  ipv4 = x[grep("IPv4", x)]
-  ip = gsub(".*? ([[:digit:]])", "\\1", z)
+  ipv4 = ipconfig[grep("IPv4", ipconfig)]
+  ip = gsub(".*? ([[:digit:]])", "\\1", ipv4)
 }
 
 #shinyApp(ui = ui, server = server)
