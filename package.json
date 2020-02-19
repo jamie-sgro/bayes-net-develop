@@ -16,7 +16,8 @@
     "url": "https://gitlab.com/Jamie.Sgro/bayes_net_develop/issues"
   },
   "homepage": "https://gitlab.com/Jamie.Sgro/bayes_net_develop#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "jsdoc": "^3.6.3"
   }
 }

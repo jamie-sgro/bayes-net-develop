@@ -4,4 +4,4 @@ node_modules
 .env
 dist.zip
 package-lock.json
-doc
+out
