@@ -40,12 +40,12 @@ if (standalone) {
 #learning.test
 
 
-#Force to bnlearn supported data type
+# Force to bnlearn supported data type
 for (i in 1:ncol(mainData)) {
   mainData[,i] = as.factor(mainData[,i])
 }
 
-#Force complete case analysis
+# Force complete case analysis
 if (length(which(is.na(mainData))) > 0) {
   print(paste("Removed", length(which(is.na(mainData))), "incomplete cases."))
   mainData = mainData[complete.cases(mainData),]
@@ -86,17 +86,17 @@ getClickType = function(input) {
 nameNodes = function(rawData) {
   n = length(rawData)
   nodeName = names(rawData[1])
-  nodes <- data.frame(id = nodeName, 
-                      name = nodeName, 
+  nodes <- data.frame(id = nodeName,
+                      name = nodeName,
                       label = nodeName,
                       title = nodeName)
-  
+
   #coerce data type
   nodes$id = as.character((nodes$id))
   nodes$name = as.character((nodes$name))
   nodes$label = as.character((nodes$label))
   nodes$title = as.character((nodes$title))
-  
+
   for (i in 2:n) {
     nodeName = names(rawData[i])
     nodes = rbind(nodes, c(id = nodeName,
@@ -145,47 +145,47 @@ getEdgeList = function(tempDag, rawData) {
                           id = c(1:n),
                           row.names = NULL)
   }
-  
+
   edgeList$from = as.character((edgeList$from))
   edgeList$to = as.character((edgeList$to))
   edgeList$arrows = as.character((edgeList$arrows))
-  
+
   return(edgeList)
 }
 
 getNewEdge = function(graph, edgeList) {
   fromId = graph$from
   toId = graph$to
-  
-  
+
+
   fromLabel = nodeStruc[[fromId]]["label"]
   toLabel = nodeStruc[[toId]]["label"]
-  
+
   g = data.frame(from = unlist(fromLabel),
                  to = unlist(toLabel),
                  arrows = "to",
                  id = graph$id,
                  row.names = NULL)
-  
+
   g$from = as.character(g$from)
   g$to = as.character(g$to)
   g$arrows = as.character(g$arrows)
-  
+
   return(g)
 }
 
 addEdge = function(input, output, edgeDf) {
   #create a new dataframe to append to edgelist
   newEdge = getNewEdge(input$myNetId_graphChange, edgeDf)
-  
+
   #update dag
   dag <<- set.arc(dag,
                   newEdge$from,
                   newEdge$to,
                   debug = F)
-  
+
   edgeDf <<- rbind(edgeDf, newEdge)
-  
+
   #update nodeStruc
   addChildParent(newEdge)
 }
@@ -193,7 +193,7 @@ addEdge = function(input, output, edgeDf) {
 validEdge = function(input, edgeDf) {
   newEdge = getNewEdge(input$myNetId_graphChange, edgeDf)
   nParents = length(nodeStruc[[newEdge$to]][["myParent"]])
-  
+
   if (isDuplicate(edgeDf, newEdge)) {
     visNetworkProxy("myNetId") %>%
       visRemoveEdges(id = input$myNetId_graphChange$id)
@@ -211,7 +211,7 @@ validEdge = function(input, edgeDf) {
                       newEdge$from,
                       newEdge$to,
                       debug = F)
-      
+
       return(NULL)
     }, error = function(e) {
       #Cyclical error
@@ -224,26 +224,26 @@ validEdge = function(input, edgeDf) {
 
 deleteEdge = function(input, edgeDf) {
   deleteType = getDeleteType(input$myNetId_graphChange)
-  
+
   if (deleteType == "edge") {
     #Remove edge from db
     deleteId = input$myNetId_graphChange$edges
     deleteIndex = which(edgeDf$id == deleteId)
-    
+
     f = edgeDf[deleteIndex,1]
     t = edgeDf[deleteIndex,2]
-    
+
     dag <<- drop.arc(dag,
                      from = f,
                      to = t)
-    
+
     #remove deleted edges from nodeStruc
     rmvIndex = which(nodeStruc[[f]][["myChild"]] == t)
     nodeStruc[[f]][["myChild"]] <<- nodeStruc[[f]][["myChild"]][-rmvIndex]
-    
+
     rmvIndex = which(nodeStruc[[t]][["myParent"]] == f)
     nodeStruc[[t]][["myParent"]] <<- nodeStruc[[t]][["myParent"]][-rmvIndex]
-    
+
     #Remove from edgeDf
     edgeDf <<- edgeDf[-c(deleteIndex), ]
   } else {
@@ -290,7 +290,7 @@ removeAllEdges = function(edgeList, dag) {
                      from = as.character(edgeList[i,1]),
                      to = as.character(edgeList[i,2]),
                      debug = F)
-    
+
     visNetworkProxy("myNetId") %>%
       visRemoveEdges(id = edgeList[i,4])
   }
@@ -298,11 +298,11 @@ removeAllEdges = function(edgeList, dag) {
 
 isDuplicate = function(database, observation) {
   k = nrow(database)
-  
+
   if (k == 0) {
     return(FALSE)
   }
-  
+
   for (i in 1:k) {
     obj = database[i,]
     if (as.character(obj$from) == observation$from) {
@@ -333,7 +333,7 @@ printNodeProb = function(input, output) {
   #(only when a node is currently selected)
   if(valid(input$myNetId_nodes)) {
     if (valid(input$current_node_id)) {
-      
+
       # nodeLabel = idToLabel(input)
       # fit <- bn.fit(dag, mainData)
       # #Post node values in sidebar
@@ -361,10 +361,10 @@ updateSpreadsheet = function(nodeLabel, output) {
     warning("nodeLabel has a length of zero")
     return()
   }
-  
+
   nodeLabel = as.character(nodeLabel)
   freqTable = prop.table(table(mainData[[nodeLabel]]))
-  
+
   #Catch catagorical variables
   if (length(freqTable) > 2) {
     output$hot <- renderRHandsontable({
@@ -373,19 +373,19 @@ updateSpreadsheet = function(nodeLabel, output) {
     warning("Please ensure each variable has up to two possible responses")
     return()
   }
-  
+
   freqTable[1] = round(freqTable[1], 2)
   freqTable[2] = round(freqTable[2], 2)
-  
+
   #Convert to matrix to preserve structure
   m = matrix(freqTable)
-  
+
   #Convert to matrix for naming
   df = as.data.frame(m)
   df = t(df)
   rownames(df) = nodeLabel
   colnames(df) = names(freqTable)
-  
+
   if (is.null(nodeStruc[[nodeLabel]][["prior"]])) {
     df[1] = 1
     df[2] = 1
@@ -393,11 +393,11 @@ updateSpreadsheet = function(nodeLabel, output) {
     df[1] = nodeStruc[[nodeLabel]][["prior"]][1]
     df[2] = nodeStruc[[nodeLabel]][["prior"]][2]
   }
-  
-  
+
+
   values <- reactiveValues()
   values[["df"]] = df
-  
+
   if (valid(df)) {
     output$hot <- renderRHandsontable({
       rhandsontable(df, rowHeaderWidth = 150)
@@ -414,14 +414,14 @@ getPostMean = function(success, failure, a, b) {
 plotPost = function(input) {
   if(valid(input$current_node_id)) {
     nodeLabel = idToLabel(input)
-    
+
     freqTable = table(mainData[[nodeLabel]])
     success = freqTable[1]
     failure = freqTable[2]
     x = seq(0,1,0.01)
-    
+
     likDist = dbeta(x, success + 1, failure + 1)
-    
+
     if (valid(nodeStruc[[nodeLabel]][["prior"]])) {
       beta = nodeStruc[[nodeLabel]][["prior"]]
       for (i in 1:2) {
@@ -429,19 +429,19 @@ plotPost = function(input) {
           beta[i] = 1
         }
       }
-      
+
       priorDist = dbeta(x, beta[1], beta[2])
       postDist = dbeta(x, success + beta[1], failure + beta[2])
       contenders = c(priorDist, likDist, postDist)
       contenders = contenders[is.finite(contenders)]
       top = max(contenders)
-      
+
       #Get ess ratio
       priorPercent = (beta[1] + beta[2]) / (success + failure + beta[1] + beta[2])
       priorPercent = round(priorPercent,2) * 100
       priorPercent = ifelse(priorPercent == 0, "<1", priorPercent)
       iss = as.character(paste(priorPercent, "% of this model is elicited from the prior*", sep = ""))
-      
+
       plot(x, likDist, type = "l", col = "red",
            ylim = c(0, top),
            ylab = "Density",
@@ -466,22 +466,22 @@ plotPost = function(input) {
 
 getMultiPosterior = function(nameList, resp, db) {
   n = length(nameList)
-  
+
   if (n != length(resp)) {
     warning("nameList and response lengths do not match")
     return()
   }
-  
+
   #Loop for Either
   eitherIndex = vector()
-  
+
   v = vector()
   respIndex = vector()
   p = logical()
   for (i in 1:n) {
     #(variable)
     v[i] = list(db[[nameList[i]]])
-    
+
     #Check for catagorical variables
     if (length(levels(v[[i]])) > 2) {
       output$shiny_return <- renderPrint({
@@ -489,7 +489,7 @@ getMultiPosterior = function(nameList, resp, db) {
       })
       return()
     }
-    
+
     #catch all input = 'either'
     if (resp[i] == "Either") {
       eitherIndex = c(eitherIndex, i)
@@ -499,47 +499,47 @@ getMultiPosterior = function(nameList, resp, db) {
       p[i] = list(v[[i]] == levels(v[[i]])[respIndex[[i]]])
     }
   }
-  
+
   #Permutate all 'either' responses up to 3
   nEither = length(eitherIndex)
   cpt = vector()
-  
+
   if (nEither > 0) {
     #either = 1 to 3
     cpt = combinate(cpt, p, eitherIndex, v, nameList, resp, respIndex, nEither)
-    
+
     cpt = as.matrix(cpt)
     dim(cpt) = generateList(nEither, 2)
-    
+
     cptName = list()
     for (i in 1:length(eitherIndex)) {
       cptName[[i]] = levels(v[[eitherIndex[i]]])
     }
-    
+
     dimnames(cpt) = cptName
-    
+
     nameDim = list()
     for (i in 1:length(eitherIndex)) {
       nameDim[[i]] = nameList[eitherIndex[i]]
     }
-    
+
     names(dimnames(cpt)) = nameDim
     ##0##
   } else {
     prior = nodeStruc[[nameList[1]]][["postMean"]]
-    
+
     if (respIndex[1] == 2) {
       if (valid(prior)) {
         prior = 1 - prior
       }
     }
-    
+
     cpt = c(cpt, getInteractionProb(p, prior))
     cpt = as.matrix(cpt)
     #Assume the selected node is the one they want
     dimnames(cpt) = list(resp[1], nameList[1])
   }
-  
+
   #Print contingencies
   given = character()
   for (i in 1:n) {
@@ -550,11 +550,11 @@ getMultiPosterior = function(nameList, resp, db) {
   cat("Conditional Probability Table\n")
   cat("\n")
   print(cpt)
-  
+
   if (nEither < n) {
     cat("\n\ngiven that:\n", given)
   }
-  
+
   prior = nodeStruc[[nameList[1]]][["postMean"]]
   if (valid(prior)) {
     cat("Used a prior for", nameList[1], "of", round(prior, 4), '\n')
@@ -565,24 +565,24 @@ getInteractionProb = function(p, prior) {
   numberOfVar = length(p)
   if (numberOfVar > 1) {
     if (valid(prior)) {
-      
+
       #With Prior
       pa = length(which(p[[1]])) / length(p[[1]])
       top = length(which(Reduce("&", p))) / length(p[[1]])
       top = top / pa * prior
-      
+
       #attach all logical vectors since Reduce() is finicky
       intersection = list()
-      
+
       #get P(a') Not
       intersection[[1]] = ifelse(p[[1]] == TRUE, FALSE, TRUE)
       for (i in 2:numberOfVar) {
         intersection[i] = p[i]
       }
-      
+
       bottom = length(which(Reduce("&", intersection))) / length(p[[1]])
       bottom = bottom / (1-pa) * (1-prior)
-      
+
       return(top/(top+bottom))
     } else {
       #No Prior
@@ -614,17 +614,17 @@ combinate = function(cpt, p, eitherIndex, v, nameList, resp, respIndex, x, n) {
     x = generateList(x, 1)
     n = length(x)
   }
-  
+
   for (i in 1:2) {
     x[n] = i
     p[eitherIndex[n]] = list(v[[eitherIndex[n]]] == levels(v[[eitherIndex[n]]])[i])
-    
+
     if (n != 1) {
       cpt = combinate(cpt, p, eitherIndex, v, nameList, resp, respIndex, x, n-1)
     } else {
       #Main function
       prior = nodeStruc[[nameList[1]]][["postMean"]]
-      
+
       if (valid(prior)) {
         if(resp[1] == "Either") {
           if (i == 2) {
@@ -635,7 +635,7 @@ combinate = function(cpt, p, eitherIndex, v, nameList, resp, respIndex, x, n) {
           prior = 1 - prior
         }
       }
-      
+
       cpt = c(cpt, getInteractionProb(p, prior))
     }
   }
@@ -645,12 +645,12 @@ combinate = function(cpt, p, eitherIndex, v, nameList, resp, respIndex, x, n) {
 getSelectState = function(input, output) {
   if (valid(input$current_node_id)) {
     nodeLabel = idToLabel(input)
-    
+
     parent = nodeStruc[[nodeLabel]][["myParent"]]
-    
+
     #Parents and self
     nodesList = c(nodeLabel, parent)
-    
+
     # if (length(nodesList) > 6) {
     #   output$selectState <- renderUI({
     #     print("Too many parents connected to a single node (>5)")
@@ -658,7 +658,7 @@ getSelectState = function(input, output) {
     #   warning("Cannot process a node with more than 5 parents")
     #   return()
     # }
-    
+
     output$selectState <- renderUI({
       if(valid(input$current_node_id)) {
         box(height = 375, tags$head(tags$style(HTML("#selectState {
@@ -707,7 +707,7 @@ getScore = function(graph, data, output) {
 updateSidbarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)
-    
+
     if (is.null(clickType)) {
       output$shiny_return <- renderPrint({
         print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
@@ -718,13 +718,13 @@ updateSidbarUi = function(input, output, dag, mainData) {
       output$hot <- renderRHandsontable({})
       output$savePrior <- renderUI({})
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
-    
+
       #CPT radio selected
       output$shiny_return <- renderPrint({
         print(arc.strength(dag, mainData, criterion = "bic")[edgeIndex,])
       })
     }
-    
+
   } else if (input$useType == 'BN Score') {
     getScore(dag, mainData, output)
   }
@@ -740,7 +740,7 @@ modString = getModString(mainData)
 dag = model2network(modString)
 
 #Declare Global Variable
-edgeDf <- getEdgeList(dag, mainData)
+edgeDf = getEdgeList(dag, mainData)
 
 
 ########## #
