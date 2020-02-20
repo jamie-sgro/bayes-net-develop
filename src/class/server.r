@@ -183,15 +183,37 @@ server <- function(input, output, session) {
     }
     
     #add new (ML) edges
-    #loglik
-    #aic
-    #bic
-    #bde
-    #bds
-    #mbde
-    #bdla
-    #k2
-    dag <<- hc(mainData, score = input$netScore)
+    #scores:
+      #loglik
+      #aic
+      #bic
+      #bde
+      #bds
+      #mbde
+      #bdla
+      #k2
+    
+    switch(input$strucAlgo, 
+           hc={
+             dag <<- hc(mainData, score = input$netScore)
+           },
+           tabu={
+             dag <<- tabu(mainData, score = input$netScore)  
+           },
+           mmhc={
+             dag <<- mmhc(mainData, maximize = input$netScore) 
+           },
+           #only "hc" and "tabu" allowed for rsmax2
+           rsmax2_hc={
+             dag <<- rsmax2(mainData, maximize = "hc")
+           },
+           rsmax2_tabu={
+             dag <<- rsmax2(mainData, maximize = "tabu")   
+           },
+           h2pc={
+             dag <<- h2pc(mainData, maximize = input$netScore)    
+           }
+    )
     
     edgeDf <<- getEdgeList(dag, mainData)
     

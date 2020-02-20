@@ -47,9 +47,18 @@ body = dashboardBody(
                             "Bayesian Dirichlet sparse" = "bds",
                             "Modified Bayesian Dirichlet equivalent" = "mbde",
                             "Locally averaged Bayesian Dirichlet" = "bdla",
-                            "K2 algorithm" = "k2"
+                            "Cooper & Herskovits' K2 algorithm" = "k2"
                           )
-                        )
+                        ),
+             radioButtons("strucAlgo", "Select Structure Learning Algorithm",
+                          c("Hill-Climbing" = "hc",
+                            "Tabu Search" = "tabu",
+                            "Max-Min Hill-Climbing" = "mmhc",
+                            "Restricted Maximization (HC Maximizing)" = "rsmax2_hc",
+                            "Restricted Maximization (Tabu Maximizing)" = "rsmax2_tabu",
+                            "Hybrid HPC" = "h2pc"
+                          )
+             )
     ),
     tabPanel("Set CPT",
              id = "cptTab",
