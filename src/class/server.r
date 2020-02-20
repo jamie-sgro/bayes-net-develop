@@ -183,7 +183,15 @@ server <- function(input, output, session) {
     }
     
     #add new (ML) edges
-    dag <<- hc(mainData, score = "bic")
+    #loglik
+    #aic
+    #bic
+    #bde
+    #bds
+    #mbde
+    #bdla
+    #k2
+    dag <<- hc(mainData, score = input$netScore)
     
     edgeDf <<- getEdgeList(dag, mainData)
     
