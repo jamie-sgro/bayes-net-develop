@@ -37,6 +37,20 @@ body = dashboardBody(
     height = "485px", width = "200px",
     id = "bodyTab",
     selected = "Network",
+    tabPanel("Settings",
+             id = "settings",
+             radioButtons("netScore", "Select Network Structure Score",
+                          c("Multinomial Log-Likelihood" = "loglik",
+                            "Akaike Information Criterion" = "aic",
+                            "Bayesian Information Criterion" = "bic",
+                            "Bayesian Dirichlet equivalent" = "bde",
+                            "Bayesian Dirichlet sparse" = "bds",
+                            "Modified Bayesian Dirichlet equivalent" = "mbde",
+                            "Locally averaged Bayesian Dirichlet" = "bdla",
+                            "K2 algorithm" = "k2"
+                          )
+                        )
+    ),
     tabPanel("Set CPT",
              id = "cptTab",
              uiOutput("selectState"),

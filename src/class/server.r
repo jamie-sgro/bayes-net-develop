@@ -191,8 +191,7 @@ server <- function(input, output, session) {
     #mbde
     #bdla
     #k2
-    #
-    dag <<- hc(mainData, score = "k2")
+    dag <<- hc(mainData, score = input$netScore)
     
     edgeDf <<- getEdgeList(dag, mainData)
     
