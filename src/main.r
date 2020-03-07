@@ -727,6 +727,26 @@ updateSidbarUi = function(input, output, dag, mainData) {
 
   } else if (input$useType == 'BN Score') {
     getScore(dag, mainData, output)
+  } else if (input$useType == 'Evaluate') {
+    output$evalTextBox <- renderPrint({
+      print("Calculating...")
+    })
+    tryMethod = function() {
+      strength = boot.strength(mainData, R = 200, m = 30, algorithm = "hc")
+      pred = as.prediction(strength, dag)
+      perf = performance(pred, "auc")
+      output$evalTextBox <- renderPrint({
+        print("Area under the ROC curve:")
+        print(perf)
+      })
+    }
+    
+    tryCatch(tryMethod(),
+    error = function(e) {
+      output$evalTextBox <- renderPrint({
+        print("Could not get area under the ROC curve.")
+      })
+    })
   }
 }
 
