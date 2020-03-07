@@ -232,6 +232,10 @@ server <- function(input, output, session) {
     updateSidbarUi(input, output, dag, mainData)
   })
   
+  observeEvent(input$useType, {
+    updateSidbarUi(input, output, dag, mainData)
+  })
+  
   observeEvent(input$savePriorButton, {
     if (is.null(input$current_node_id)) {
       output$shiny_return <- renderPrint({
