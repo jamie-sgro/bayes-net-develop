@@ -22,10 +22,20 @@ sidebar = dashboardSidebar(width = "400px",
                                 max-height: 375px;
                                 background: ghostwhite;
                                 }")))
+                               ),
+                               conditionalPanel(
+                                 condition = "input.useType == 'Evaluate'",
+                                 verbatimTextOutput("evalTextBox"),
+                                 tags$head(tags$style(HTML("#evalTextBox {
+                                font-size: 12px;
+                                overflow-y:scroll;
+                                max-height: 375px;
+                                background: ghostwhite;
+                                }")))
                                )
                            ),
                            #h3("Actions"),
-                           radioButtons("useType", "Select Output", c("CP Table", "BN Score")),
+                           radioButtons("useType", "Select Output", c("CP Table", "BN Score", "Evaluate")),
                            actionButton("debugButton", "Freeze"),
                            actionButton("learnNetButton", "Learn Network")
                            #,actionButton("savePriorButton", "Save Priors")
