@@ -215,6 +215,11 @@ server <- function(input, output, session) {
            }
     )
     
+    # If we implement gs() and other constraint-based algos in the future
+    #if (!directed(dag)) {
+    #  dag = cextend(dag)
+    #}
+    
     edgeDf <<- getEdgeList(dag, mainData)
     
     #update NodeStruc
