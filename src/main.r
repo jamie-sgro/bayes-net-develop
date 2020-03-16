@@ -64,12 +64,7 @@ if (subData) {
 #### Functions ####
 
 valid = function(obj) {
-  #a variant to the (!is.null) argument
-  if (is.null(obj)) {
-    return(FALSE)
-  } else {
-    return(TRUE)
-  }
+  return(!is.null(obj))
 }
 
 getClickType = function(input) {
@@ -740,7 +735,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
         print(perf)
       })
     }
-    
+
     tryCatch(tryMethod(),
     error = function(e) {
       output$evalTextBox <- renderPrint({
