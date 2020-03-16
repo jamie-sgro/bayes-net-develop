@@ -186,6 +186,15 @@ addEdge = function(input, output, edgeDf) {
 }
 
 "
+  * remove edge from visNet only (not from bnlearn edgeDf)
+  * @param {str} id id string of edge(s) to delete
+"
+undoEdge = function(id) {
+  visNetworkProxy("myNetId") %>%
+    visRemoveEdges(id = id)
+}
+
+"
  * check whether the newly proposed edge to be created in a visNet satisfies
  * the following conditions:
  * - new edge is not a duplicate (i.e. does not have the same 'to' and 'from')
@@ -205,31 +214,22 @@ validEdge = function(graphChange, edgeDf) {
   nParents = length(nodeStruc[[newEdge$to]][["myParent"]])
 
   if (isDuplicate(edgeDf, newEdge)) {
-    visNetworkProxy("myNetId") %>%
-      visRemoveEdges(id = graphChange$id)
+    undoEdge(graphChange$id)
     return("Cannot create duplicate edge.")
-  # } else if (nParents == 5) {
-  #   visNetworkProxy("myNetId") %>%
-  #     visRemoveEdges(id = graphChange$id)
-  #   return("Maximum number of parents reached for this node")
-  } else {
-    pdag = NULL
-    pdag = model2network(modelstring(dag))
-    #check cyclic on dummy var
-    arcError = tryCatch({
-      pdag <- set.arc(pdag,
-                      newEdge$from,
-                      newEdge$to,
-                      debug = F)
-
-      return(NULL)
-    }, error = function(e) {
-      #Cyclical error
-      visNetworkProxy("myNetId") %>%
-        visRemoveEdges(id = graphChange$id)
-      return("The resulting graph contains cycles.")
-    })
   }
+
+  pdag = NULL
+  pdag = model2network(modelstring(dag))
+  #check cyclic on dummy var
+  arcError = tryCatch({
+    pdag <- set.arc(pdag, newEdge$from, newEdge$to, debug = F)
+    return(NULL)
+  }, error = function(e) {
+    #Cyclical error
+    undoEdge(graphChange$id)
+
+    return("The resulting graph contains cycles.")
+  })
 }
 
 deleteEdge = function(input, edgeDf) {
@@ -301,8 +301,7 @@ removeAllEdges = function(edgeList, dag) {
                      to = as.character(edgeList[i,2]),
                      debug = F)
 
-    visNetworkProxy("myNetId") %>%
-      visRemoveEdges(id = edgeList[i,4])
+    undoEdge(edgeList[i,4])
   }
 }
 

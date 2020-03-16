@@ -1,4 +1,4 @@
-header = dashboardHeader(title = "Bayes Belief Network",
+header = dashboardHeader(title = "Bayesian Network",
                          titleWidth = "400px")
 
 sidebar = dashboardSidebar(width = "400px",
