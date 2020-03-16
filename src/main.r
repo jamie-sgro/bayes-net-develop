@@ -185,17 +185,32 @@ addEdge = function(input, output, edgeDf) {
   addChildParent(newEdge)
 }
 
-validEdge = function(input, edgeDf) {
-  newEdge = getNewEdge(input$myNetId_graphChange, edgeDf)
+"
+ * check whether the newly proposed edge to be created in a visNet satisfies
+ * the following conditions:
+ * - new edge is not a duplicate (i.e. does not have the same 'to' and 'from')
+ * - new edge is not a reverse of an old edge
+ * - new edge does not create a partially directed acyclic graph (pdag)
+ * @param  {list} graphChange data structure regarding the new edge:
+ * - $cmd = 'addEdge'
+ * - $id ~= '4e7db4f3-3484-4902-8d7c-d52f05da9db9'
+ * - $from = 'someNodeName'
+ * - $to = 'someOtherNodeName'
+ * @param  {list} edgeDf current database of all edges in network with params:
+ * - from, to, arrows, id
+ * @return {string} NULL if no errors occured, else string with error code
+"
+validEdge = function(graphChange, edgeDf) {
+  newEdge = getNewEdge(graphChange, edgeDf)
   nParents = length(nodeStruc[[newEdge$to]][["myParent"]])
 
   if (isDuplicate(edgeDf, newEdge)) {
     visNetworkProxy("myNetId") %>%
-      visRemoveEdges(id = input$myNetId_graphChange$id)
+      visRemoveEdges(id = graphChange$id)
     return("Cannot create duplicate edge.")
   # } else if (nParents == 5) {
   #   visNetworkProxy("myNetId") %>%
-  #     visRemoveEdges(id = input$myNetId_graphChange$id)
+  #     visRemoveEdges(id = graphChange$id)
   #   return("Maximum number of parents reached for this node")
   } else {
     pdag = NULL
@@ -211,7 +226,7 @@ validEdge = function(input, edgeDf) {
     }, error = function(e) {
       #Cyclical error
       visNetworkProxy("myNetId") %>%
-        visRemoveEdges(id = input$myNetId_graphChange$id)
+        visRemoveEdges(id = graphChange$id)
       return("The resulting graph contains cycles.")
     })
   }
@@ -291,6 +306,14 @@ removeAllEdges = function(edgeList, dag) {
   }
 }
 
+"
+ * check if new edge has the same 'to' and 'from' as another edge
+ * (i.e. duplicate)
+ * @param  {list} database current database of all edges in network with params:
+ * - from, to, arrows, id
+ * @param  {list} observation current new edge to compare against
+ * @return {boolean} T if duplicate, else F
+"
 isDuplicate = function(database, observation) {
   k = nrow(database)
 
@@ -298,6 +321,7 @@ isDuplicate = function(database, observation) {
     return(FALSE)
   }
 
+  #check if network already has edge with the same 'from' and 'to' nodes
   for (i in 1:k) {
     obj = database[i,]
     if (as.character(obj$from) == observation$from) {
@@ -745,6 +769,15 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
+getIp = function(localhost) {
+  if (localhost) return("127.0.0.1");
+
+  ipconfig = system("ipconfig", intern=TRUE)
+  ipv4 = ipconfig[grep("IPv4", ipconfig)]
+  ip = gsub(".*? ([[:digit:]])", "\\1", ipv4)
+  return(ip)
+}
+
 
 
 #### CREATE DAG ####
@@ -772,15 +805,5 @@ source("class/ui.r")
 
 source("./class/server.r")
 
-
-
-if (localhost) {
-  ip = "127.0.0.1"
-} else {
-  ipconfig = system("ipconfig", intern=TRUE)
-  ipv4 = ipconfig[grep("IPv4", ipconfig)]
-  ip = gsub(".*? ([[:digit:]])", "\\1", ipv4)
-}
-
 #shinyApp(ui = ui, server = server)
-runApp(list(ui=ui, server=server), host=ip, port=80)
+runApp(list(ui=ui, server=server), host=getIp(localhost), port=80)
