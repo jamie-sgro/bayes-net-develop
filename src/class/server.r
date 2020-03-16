@@ -124,7 +124,7 @@ server <- function(input, output, session) {
     }
 
     if (cmd == "deleteElements") {
-      deleteEdge(input, edgeDf)
+      deleteEdge(input$myNetId_graphChange, edgeDf)
 
       output$shiny_return <- renderPrint({
         print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
@@ -231,7 +231,7 @@ server <- function(input, output, session) {
     #update NodeStruc
     if (nrow(edgeDf) > 0) {
       for (i in 1:nrow(edgeDf)) {
-        addChildParent(edgeDf[i,])
+        updateNodeStruc(edgeDf[i,])
       }
     }
 

@@ -182,7 +182,7 @@ addEdge = function(input, output, edgeDf) {
   edgeDf <<- rbind(edgeDf, newEdge)
 
   #update nodeStruc
-  addChildParent(newEdge)
+  updateNodeStruc(newEdge)
 }
 
 "
@@ -232,33 +232,26 @@ validEdge = function(graphChange, edgeDf) {
   })
 }
 
-deleteEdge = function(input, edgeDf) {
-  deleteType = getDeleteType(input$myNetId_graphChange)
+deleteEdge = function(graphChange, edgeDf) {
+  if (getDeleteType(graphChange) != "edge") stop("Invalid deletion detected.")
 
-  if (deleteType == "edge") {
-    #Remove edge from db
-    deleteId = input$myNetId_graphChange$edges
-    deleteIndex = which(edgeDf$id == deleteId)
+  #Remove edge from db
+  deleteIndex = which(edgeDf$id == graphChange$edges)
 
-    f = edgeDf[deleteIndex,1]
-    t = edgeDf[deleteIndex,2]
+  f = edgeDf[deleteIndex,1]
+  t = edgeDf[deleteIndex,2]
 
-    dag <<- drop.arc(dag,
-                     from = f,
-                     to = t)
+  dag <<- drop.arc(dag, from = f, to = t)
 
-    #remove deleted edges from nodeStruc
-    rmvIndex = which(nodeStruc[[f]][["myChild"]] == t)
-    nodeStruc[[f]][["myChild"]] <<- nodeStruc[[f]][["myChild"]][-rmvIndex]
+  #Remove from edgeDf
+  edgeDf <<- edgeDf[-c(deleteIndex), ]
 
-    rmvIndex = which(nodeStruc[[t]][["myParent"]] == f)
-    nodeStruc[[t]][["myParent"]] <<- nodeStruc[[t]][["myParent"]][-rmvIndex]
+  #remove deleted edges from nodeStruc
+  rmvIndex = which(nodeStruc[[f]][["myChild"]] == t)
+  nodeStruc[[f]][["myChild"]] <<- nodeStruc[[f]][["myChild"]][-rmvIndex]
 
-    #Remove from edgeDf
-    edgeDf <<- edgeDf[-c(deleteIndex), ]
-  } else {
-    stop("Invalid deletion detected.")
-  }
+  rmvIndex = which(nodeStruc[[t]][["myParent"]] == f)
+  nodeStruc[[t]][["myParent"]] <<- nodeStruc[[t]][["myParent"]][-rmvIndex]
 }
 
 getDeleteType = function(inGraph) {
@@ -280,7 +273,13 @@ getDeleteType = function(inGraph) {
   }
 }
 
-addChildParent = function(edge) {
+"
+ * add/remove at least one new child to a node and a new parent to another node
+ * indicating that an edge has been created or destroyed
+ * @param  {[type]} edge [description]
+ * @return {[type]}      [description]
+"
+updateNodeStruc = function(edge) {
   t = edge$to
   f = edge$from
   nodeStruc[[f]][["myChild"]] <<- c(nodeStruc[[f]][["myChild"]], t)
