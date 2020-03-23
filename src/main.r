@@ -429,56 +429,57 @@ getPostMean = function(success, failure, a, b) {
 }
 
 plotPost = function(input) {
-  if(valid(input$current_node_id)) {
-    nodeLabel = idToLabel(input)
+  if(is.null(input$current_node_id)) return()
 
-    freqTable = table(mainData[[nodeLabel]])
-    success = freqTable[1]
-    failure = freqTable[2]
-    x = seq(0,1,0.01)
+  nodeLabel = idToLabel(input)
 
-    likDist = dbeta(x, success + 1, failure + 1)
+  freqTable = table(mainData[[nodeLabel]])
+  success = freqTable[1]
+  failure = freqTable[2]
+  x = seq(0,1,0.01)
 
-    if (valid(nodeStruc[[nodeLabel]][["prior"]])) {
-      beta = nodeStruc[[nodeLabel]][["prior"]]
-      for (i in 1:2) {
-        if (beta[i] == 0) {
-          beta[i] = 1
-        }
-      }
+  likDist = dbeta(x, success + 1, failure + 1)
 
-      priorDist = dbeta(x, beta[1], beta[2])
-      postDist = dbeta(x, success + beta[1], failure + beta[2])
-      contenders = c(priorDist, likDist, postDist)
-      contenders = contenders[is.finite(contenders)]
-      top = max(contenders)
+  if (is.null(nodeStruc[[nodeLabel]][["prior"]])) {
+  plot(x, likDist, type = "l", col = "red",
+    ylab = "Density",
+    xlab = "Percent",
+    main = nodeLabel)
+    return()
+  }
 
-      #Get ess ratio
-      priorPercent = (beta[1] + beta[2]) / (success + failure + beta[1] + beta[2])
-      priorPercent = round(priorPercent,2) * 100
-      priorPercent = ifelse(priorPercent == 0, "<1", priorPercent)
-      iss = as.character(paste(priorPercent, "% of this model is elicited from the prior*", sep = ""))
-
-      plot(x, likDist, type = "l", col = "red",
-           ylim = c(0, top),
-           ylab = "Density",
-           xlab = c("Percent",iss),
-           main = nodeLabel)
-      lines(x, priorDist, col = "blue",
-            lty = "dotted")
-      lines(x, postDist, col = rgb(0,0.75,0),
-            lty = "longdash")
-      legend(x = 0, y = top,
-             c("Likelihood", "Prior", "Posterior"),
-             col = c("red", "blue", rgb(0,0.75,0)),
-             lty = c("solid", "dotted", "longdash"))
-    } else {
-      plot(x, likDist, type = "l", col = "red",
-           ylab = "Density",
-           xlab = "Percent",
-           main = nodeLabel)
+  beta = nodeStruc[[nodeLabel]][["prior"]]
+  for (i in 1:2) {
+    if (beta[i] == 0) {
+      beta[i] = 1
     }
   }
+
+  priorDist = dbeta(x, beta[1], beta[2])
+  postDist = dbeta(x, success + beta[1], failure + beta[2])
+  contenders = c(priorDist, likDist, postDist)
+  contenders = contenders[is.finite(contenders)]
+  top = max(contenders)
+
+  #Get ess ratio
+  priorPercent = (beta[1] + beta[2]) / (success + failure + beta[1] + beta[2])
+  priorPercent = round(priorPercent,2) * 100
+  priorPercent = ifelse(priorPercent == 0, "<1", priorPercent)
+  iss = as.character(paste(priorPercent, "% of this model is elicited from the prior*", sep = ""))
+
+  plot(x, likDist, type = "l", col = "red",
+       ylim = c(0, top),
+       ylab = "Density",
+       xlab = c("Percent",iss),
+       main = nodeLabel)
+  lines(x, priorDist, col = "blue",
+        lty = "dotted")
+  lines(x, postDist, col = rgb(0,0.75,0),
+        lty = "longdash")
+  legend(x = 0, y = top,
+         c("Likelihood", "Prior", "Posterior"),
+         col = c("red", "blue", rgb(0,0.75,0)),
+         lty = c("solid", "dotted", "longdash"))
 }
 
 getMultiPosterior = function(nameList, resp, db) {
