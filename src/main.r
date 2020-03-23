@@ -79,32 +79,20 @@ getClickType = function(input) {
 }
 
 nameNodes = function(rawData) {
-  n = length(rawData)
-  nodeName = names(rawData[1])
-  nodes <- data.frame(id = nodeName,
-                      name = nodeName,
-                      label = nodeName,
-                      title = nodeName)
-
-  #coerce data type
-  nodes$id = as.character((nodes$id))
-  nodes$name = as.character((nodes$name))
-  nodes$label = as.character((nodes$label))
-  nodes$title = as.character((nodes$title))
-
-  for (i in 2:n) {
-    nodeName = names(rawData[i])
-    nodes = rbind(nodes, c(id = nodeName,
+  nodes = NULL
+  for (nodeName in names(rawData)) {
+    rowDf = data.frame(id = nodeName,
                            name = nodeName,
                            label = nodeName,
-                           title = nodeName))
+                           title = nodeName)
+   nodes = rbind(nodes, rowDf)
   }
   return(nodes)
 }
 
 "
 * take all column names and return a network datastructure readable by bnlearn
-* @param  {list()} rawData unmutated data read in from a function like read.csv
+* @param  {list} rawData unmutated data read in from a function like read.csv
 * @return {[type]} a network structure for a graph with no edges
 * - i.e. data with headers 'a','b','c' would return '[a][b][c]'
 "
