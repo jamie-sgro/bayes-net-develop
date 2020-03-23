@@ -102,6 +102,12 @@ nameNodes = function(rawData) {
   return(nodes)
 }
 
+"
+* take all column names and return a network datastructure readable by bnlearn
+* @param  {list()} rawData unmutated data read in from a function like read.csv
+* @return {[type]} a network structure for a graph with no edges
+* - i.e. data with headers 'a','b','c' would return '[a][b][c]'
+"
 getModString = function(rawData) {
   n = length(rawData)
   modNet = ""
@@ -676,7 +682,7 @@ getSelectState = function(input, output) {
   nodesList = c(nodeLabel, parent)
 
   output$selectState <- renderUI({
-    if(valid(input$current_node_id)) {
+    if (valid(input$current_node_id)) {
       box(height = 375, tags$head(tags$style(HTML("#selectState {
                                      overflow-y:scroll;
                                      max-height: 400px;
@@ -774,10 +780,8 @@ getIp = function(localhost) {
 
 #### CREATE DAG ####
 
-modString = getModString(mainData)
-
 # create and plot the network structure.
-dag = model2network(modString)
+dag = model2network(getModString(mainData))
 
 #Declare Global Variable
 edgeDf = getEdgeList(dag, mainData)
