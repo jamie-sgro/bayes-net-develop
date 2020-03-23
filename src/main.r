@@ -441,10 +441,10 @@ plotPost = function(input) {
   likDist = dbeta(x, success + 1, failure + 1)
 
   if (is.null(nodeStruc[[nodeLabel]][["prior"]])) {
-  plot(x, likDist, type = "l", col = "red",
-    ylab = "Density",
-    xlab = "Percent",
-    main = nodeLabel)
+    plot(x, likDist, type = "l", col = "red",
+      ylab = "Density",
+      xlab = "Percent",
+      main = nodeLabel)
     return()
   }
 
