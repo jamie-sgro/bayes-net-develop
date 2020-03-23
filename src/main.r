@@ -661,44 +661,37 @@ combinate = function(cpt, p, eitherIndex, v, nameList, resp, respIndex, x, n) {
 }
 
 getSelectState = function(input, output) {
-  if (valid(input$current_node_id)) {
-    nodeLabel = idToLabel(input)
-
-    parent = nodeStruc[[nodeLabel]][["myParent"]]
-
-    #Parents and self
-    nodesList = c(nodeLabel, parent)
-
-    # if (length(nodesList) > 6) {
-    #   output$selectState <- renderUI({
-    #     print("Too many parents connected to a single node (>5)")
-    #   })
-    #   warning("Cannot process a node with more than 5 parents")
-    #   return()
-    # }
-
-    output$selectState <- renderUI({
-      if(valid(input$current_node_id)) {
-        box(height = 375, tags$head(tags$style(HTML("#selectState {
-                                       overflow-y:scroll;
-                                       max-height: 400px;
-                                       max-width: 480px;
-                                       }"))),
-          lapply(1:length(nodesList), function(i) {
-            response = levels(mainData[[nodesList[i]]])
-            selectInput(paste("select", as.character(i), sep = ""),
-                        nodesList[i],
-                        c(response[1], response[2], "Either"),
-                        selected = "Either")
-          })
-        )
-      }
-    })
-  } else {
+  if (is.null(input$current_node_id)) {
     output$selectState <- renderUI({
       print("Please select a node to generate conditional probability table (CPT)")
     })
+    return()
   }
+
+  nodeLabel = idToLabel(input)
+
+  parent = nodeStruc[[nodeLabel]][["myParent"]]
+
+  #Parents and self
+  nodesList = c(nodeLabel, parent)
+
+  output$selectState <- renderUI({
+    if(valid(input$current_node_id)) {
+      box(height = 375, tags$head(tags$style(HTML("#selectState {
+                                     overflow-y:scroll;
+                                     max-height: 400px;
+                                     max-width: 480px;
+                                     }"))),
+        lapply(1:length(nodesList), function(i) {
+          response = levels(mainData[[nodesList[i]]])
+          selectInput(paste("select", as.character(i), sep = ""),
+                      nodesList[i],
+                      c(response[1], response[2], "Either"),
+                      selected = "Either")
+        })
+      )
+    }
+  })
 }
 
 getSaveState = function(input, output) {
