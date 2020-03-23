@@ -82,9 +82,9 @@ nameNodes = function(rawData) {
   nodes = NULL
   for (nodeName in names(rawData)) {
     rowDf = data.frame(id = nodeName,
-                           name = nodeName,
-                           label = nodeName,
-                           title = nodeName)
+                       name = nodeName,
+                       label = nodeName,
+                       title = nodeName)
    nodes = rbind(nodes, rowDf)
   }
   return(nodes)
@@ -280,7 +280,7 @@ updateNodeStruc = function(edge) {
   nodeStruc[[t]][["myParent"]] <<- c(nodeStruc[[t]][["myParent"]], f)
 }
 
-clearChildParent = function(){
+clearChildParent = function() {
   for (i in 1:length(nodeStruc)) {
     nodeStruc[[i]][["myChild"]] <<- character()
     nodeStruc[[i]][["myParent"]] <<- character()
@@ -709,6 +709,7 @@ getScore = function(graph, data, output) {
   })
 }
 
+#TODO refactor and standardize params
 updateSidbarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)

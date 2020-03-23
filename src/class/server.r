@@ -126,9 +126,13 @@ server <- function(input, output, session) {
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-      output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
-      })
+    #  output$shiny_return <- renderPrint({
+    #    print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+    #  })
+      updateRadioButtons(session, "useType", "Select Output",
+        c("CP Table", "BN Score", "Evaluate"),
+        selected = "BN Score"
+      )
     }
 
     if (cmd == "deleteCanceled") {
