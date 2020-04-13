@@ -1,4 +1,4 @@
-header = dashboardHeader(title = "Bayes Belief Network",
+header = dashboardHeader(title = "Bayesian Network",
                          titleWidth = "400px")
 
 sidebar = dashboardSidebar(width = "400px",
@@ -22,10 +22,20 @@ sidebar = dashboardSidebar(width = "400px",
                                 max-height: 375px;
                                 background: ghostwhite;
                                 }")))
+                               ),
+                               conditionalPanel(
+                                 condition = "input.useType == 'Evaluate'",
+                                 verbatimTextOutput("evalTextBox"),
+                                 tags$head(tags$style(HTML("#evalTextBox {
+                                font-size: 12px;
+                                overflow-y:scroll;
+                                max-height: 375px;
+                                background: ghostwhite;
+                                }")))
                                )
                            ),
                            #h3("Actions"),
-                           radioButtons("useType", "Select Output", c("CP Table", "BN Score")),
+                           radioButtons("useType", "Select Output", c("CP Table", "BN Score", "Evaluate")),
                            actionButton("debugButton", "Freeze"),
                            actionButton("learnNetButton", "Learn Network")
                            #,actionButton("savePriorButton", "Save Priors")
@@ -48,7 +58,8 @@ body = dashboardBody(
                             "Modified Bayesian Dirichlet equivalent" = "mbde",
                             "Locally averaged Bayesian Dirichlet" = "bdla",
                             "Cooper & Herskovits' K2 algorithm" = "k2"
-                          )
+                          ),
+                          selected = DEFAULT_NETSCORE
                         ),
              radioButtons("strucAlgo", "Select Structure Learning Algorithm",
                           c("Hill-Climbing" = "hc",
@@ -57,7 +68,8 @@ body = dashboardBody(
                             "Restricted Maximization (HC Maximizing)" = "rsmax2_hc",
                             "Restricted Maximization (Tabu Maximizing)" = "rsmax2_tabu",
                             "Hybrid HPC" = "h2pc"
-                          )
+                          ),
+                          selected = DEFAULT_STRUCALGO
              )
     ),
     tabPanel("Set CPT",
