@@ -1,6 +1,24 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
+  # observeEvent(input$fileTabNew, {
+  #   input$fileTab = "new"
+  # })
+  #
+  # observeEvent(input$fileTabSave, {
+  #   session$sendCustomMessage(
+  #     type = 'testmessage',
+  #     message = "This feature is under construction"
+  #   )
+  # })
+  #
+  # observeEvent(input$fileTabLoad, {
+  #   session$sendCustomMessage(
+  #     type = 'testmessage',
+  #     message = "This feature is under construction"
+  #   )
+  # })
+
   #setup network
   output$myNetId <- renderVisNetwork({
     visNetwork(nameNodes(mainData), edgeDf) %>%
