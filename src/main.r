@@ -16,7 +16,7 @@ checkPackage = function(pack) {
 
 #Import Package
 packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes", "ROCR")
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs")
 
 for (package in packList) {
   checkPackage(package)

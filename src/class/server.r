@@ -19,6 +19,35 @@ server <- function(input, output, session) {
   #   )
   # })
 
+
+  observeEvent(input$saveNetworkBtn, {
+    fileName = ""
+    if (input$saveNetworkSelect == "Save as new:") {
+      fileName = input$saveNetworkFileName
+    } else {
+      fileName = input$saveNetworkSelect
+    }
+
+    if (fileName == "") {
+      print("Nope")
+      return()
+    }
+
+    print(fileName)
+    # tags$script(HTML(
+    #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
+    # ))
+    # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
+    runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
+    updateTabsetPanel(session, "tabset",
+      selected = "Network"
+    )
+  })
+
+  observeEvent(input$loadNetworkBtn, {
+    print("test")
+  })
+
   observeEvent(input$fileTabType, {
     # Files that end with "RData" case sensitive
     files = list.files(SAVE_FOLDER, pattern="\\.RData$")
@@ -30,12 +59,20 @@ server <- function(input, output, session) {
       # Remove .RData from file name
       parsedFiles = c(parsedFiles, gsub(".RData", "", file))
     }
+    output$saveNetworkSelect = renderUI({
+      selectInput(
+        "saveNetworkSelect",
+        "Select File",
+        c(parsedFiles, "Save as new:"),
+        selected = "Save as new:"
+      )
+    })
     output$loadNetworkSelect = renderUI({
       selectInput(
         "loadNetworkSelect",
         "Select File",
-        c(parsedFiles, "NULL"),
-        selected = "NULL"
+        c(parsedFiles, "Select one:"),
+        selected = "Select one:"
       )
     })
   })
