@@ -277,6 +277,13 @@ getDeleteType = function(inGraph) {
   }
 }
 
+updateBnScoreTextBox = function(output, dag, mainData) {
+  output$bnScoreTextBox <- renderPrint({
+    print(getScore(dag, mainData))
+    print(dag)
+  })
+}
+
 "
  * add/remove at least one new child to a node and a new parent to another node
  * indicating that an edge has been created or destroyed
@@ -744,10 +751,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
     }
 
   } else if (input$useType == 'BN Score') {
-    output$bnScoreTextBox <- renderPrint({
-      print(getScore(dag, mainData))
-      print(dag)
-    })
+    updateBnScoreTextBox(output, dag, mainData)
   } else if (input$useType == 'Evaluate') {
     output$evalTextBox <- renderPrint({
       print("Calculating...")

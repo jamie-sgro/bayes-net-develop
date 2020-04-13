@@ -94,10 +94,7 @@ server <- function(input, output, session) {
 
   #BN Score radio selected
   observeEvent(input$useType == 'BN Score', {
-    output$bnScoreTextBox <- renderPrint({
-      print(getScore(dag, mainData))
-      print(dag)
-    })
+    updateBnScoreTextBox(output, dag, mainData)
   })
 
 
@@ -136,10 +133,7 @@ server <- function(input, output, session) {
         c("CP Table", "BN Score", "Evaluate"),
         selected = "BN Score"
       )
-      output$bnScoreTextBox <- renderPrint({
-        print(getScore(dag, mainData))
-        print(dag)
-      })
+      updateBnScoreTextBox(output, dag, mainData)
     }
 
     if (cmd == "deleteCanceled") {
