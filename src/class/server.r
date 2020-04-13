@@ -136,6 +136,10 @@ server <- function(input, output, session) {
         c("CP Table", "BN Score", "Evaluate"),
         selected = "BN Score"
       )
+      output$bnScoreTextBox <- renderPrint({
+        print(getScore(dag, mainData))
+        print(dag)
+      })
     }
 
     if (cmd == "deleteCanceled") {
