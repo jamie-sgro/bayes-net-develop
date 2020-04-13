@@ -1,7 +1,10 @@
 #Set Parameters
-subData = F
-standalone = F
-localhost = F
+SUBDATA = F
+STANDALONE = F
+LOCALHOST = F
+
+DEFAULT_NETSCORE = "loglik"
+DEFAULT_STRUCALGO = "hc"
 
 checkPackage = function(pack) {
   if (!is.element(pack, installed.packages()[,1])) {
@@ -22,7 +25,7 @@ for (package in packList) {
 #### Import Data ####
 setwd(getwd())
 
-if (standalone) {
+if (STANDALONE) {
   source(paste(getwd(),"/fsoPath.dat", sep = ""))
   mainData = read.csv(filePath,
                       fileEncoding="UTF-8-BOM")
@@ -52,7 +55,7 @@ if (length(which(is.na(mainData))) > 0) {
 }
 
 #Get Subset
-if (subData) {
+if (SUBDATA) {
   subata <- sample.int(n = nrow(mainData),
                        size = floor(0.05*nrow(mainData)),
                        replace = F)
@@ -103,7 +106,7 @@ getModString = function(rawData) {
     varName = names(rawData[i])
     if (nchar(varName) > 50) {
       errMsg = paste("The variable in column", i , "exceeds the maximum number of characters")
-      if (standalone) {
+      if (STANDALONE) {
         tcltk::tk_messageBox(message = errMsg,
                              type="ok",
                              icon="error")
@@ -118,10 +121,17 @@ getModString = function(rawData) {
   return(modNet)
 }
 
-getEdgeList = function(tempDag, rawData) {
-  rawArcStrength = arc.strength(tempDag, rawData)
+getArcStrength = function(dag, data, criterion) {
+  return (arc.strength(dag, data, criterion = criterion))
+}
 
-  n = nrow(arc.strength(tempDag, rawData))
+getEdgeList = function(tempDag, rawData, netScore) {
+  if (missing(netScore)) {
+    netScore = DEFAULT_NETSCORE
+  }
+  rawArcStrength = getArcStrength(tempDag, rawData, netScore)
+
+  n = nrow(rawArcStrength)
   if (n == 0) {
     edgeList = data.frame(from = character(),
                           to = character(),
@@ -727,7 +737,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
 
       #CPT radio selected
       output$shiny_return <- renderPrint({
-        print(arc.strength(dag, mainData, criterion = "bic")[edgeIndex,])
+        print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
 
@@ -756,8 +766,8 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
-getIp = function(localhost) {
-  if (localhost) return("127.0.0.1");
+getIp = function(LOCALHOST) {
+  if (LOCALHOST) return("127.0.0.1");
 
   ipconfig = system("ipconfig", intern=TRUE)
   ipv4 = ipconfig[grep("IPv4", ipconfig)]
@@ -791,4 +801,4 @@ source("class/ui.r")
 source("./class/server.r")
 
 #shinyApp(ui = ui, server = server)
-runApp(list(ui=ui, server=server), host=getIp(localhost), port=80)
+runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)

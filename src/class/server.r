@@ -85,7 +85,7 @@ server <- function(input, output, session) {
 
       #CPT radio selected
       output$shiny_return <- renderPrint({
-        print(arc.strength(dag, mainData, criterion = "bic")[edgeIndex,])
+        print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
   })
@@ -178,7 +178,7 @@ server <- function(input, output, session) {
 
     visNetworkProxy("myNetId") %>%
       visPhysics(enabled = phys)
-    #print(arc.strength(dag, mainData, criterion = "bic"))
+    #print(getArcStrength(dag, mainData, input$netScore))
     #print(dag)
     #print(edgeDf)
     #print(nodeStruc)
@@ -193,7 +193,7 @@ server <- function(input, output, session) {
     }
 
     #add new (ML) edges
-    #scores:
+    #input$netScore:
       #loglik
       #aic
       #bic
@@ -230,7 +230,7 @@ server <- function(input, output, session) {
     #  dag = cextend(dag)
     #}
 
-    edgeDf <<- getEdgeList(dag, mainData)
+    edgeDf <<- getEdgeList(dag, mainData, input$netScore)
 
     #update NodeStruc
     if (nrow(edgeDf) > 0) {
@@ -342,7 +342,7 @@ server <- function(input, output, session) {
     })
   })
 
-  if (standalone) {
+  if (STANDALONE) {
     # close the R session when Chrome closes
     session$onSessionEnded(function() {
       stopApp()
