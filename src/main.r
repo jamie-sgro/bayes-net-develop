@@ -1,7 +1,10 @@
 #Set Parameters
-subData = F
-standalone = F
-localhost = F
+SUBDATA = F
+STANDALONE = F
+LOCALHOST = F
+
+DEFAULT_NETSCORE = "loglik"
+DEFAULT_STRUCALGO = "hc"
 
 checkPackage = function(pack) {
   if (!is.element(pack, installed.packages()[,1])) {
@@ -22,7 +25,7 @@ for (package in packList) {
 #### Import Data ####
 setwd(getwd())
 
-if (standalone) {
+if (STANDALONE) {
   source(paste(getwd(),"/fsoPath.dat", sep = ""))
   mainData = read.csv(filePath,
                       fileEncoding="UTF-8-BOM")
@@ -52,7 +55,7 @@ if (length(which(is.na(mainData))) > 0) {
 }
 
 #Get Subset
-if (subData) {
+if (SUBDATA) {
   subata <- sample.int(n = nrow(mainData),
                        size = floor(0.05*nrow(mainData)),
                        replace = F)
@@ -82,9 +85,9 @@ nameNodes = function(rawData) {
   nodes = NULL
   for (nodeName in names(rawData)) {
     rowDf = data.frame(id = nodeName,
-                           name = nodeName,
-                           label = nodeName,
-                           title = nodeName)
+                       name = nodeName,
+                       label = nodeName,
+                       title = nodeName)
    nodes = rbind(nodes, rowDf)
   }
   return(nodes)
@@ -103,7 +106,7 @@ getModString = function(rawData) {
     varName = names(rawData[i])
     if (nchar(varName) > 50) {
       errMsg = paste("The variable in column", i , "exceeds the maximum number of characters")
-      if (standalone) {
+      if (STANDALONE) {
         tcltk::tk_messageBox(message = errMsg,
                              type="ok",
                              icon="error")
@@ -118,10 +121,17 @@ getModString = function(rawData) {
   return(modNet)
 }
 
-getEdgeList = function(tempDag, rawData) {
-  rawArcStrength = arc.strength(tempDag, rawData)
+getArcStrength = function(dag, data, criterion) {
+  return (arc.strength(dag, data, criterion = criterion))
+}
 
-  n = nrow(arc.strength(tempDag, rawData))
+getEdgeList = function(tempDag, rawData, netScore) {
+  if (missing(netScore)) {
+    netScore = DEFAULT_NETSCORE
+  }
+  rawArcStrength = getArcStrength(tempDag, rawData, netScore)
+
+  n = nrow(rawArcStrength)
   if (n == 0) {
     edgeList = data.frame(from = character(),
                           to = character(),
@@ -267,6 +277,13 @@ getDeleteType = function(inGraph) {
   }
 }
 
+updateBnScoreTextBox = function(output, dag, mainData) {
+  output$bnScoreTextBox <- renderPrint({
+    print(getScore(dag, mainData))
+    print(dag)
+  })
+}
+
 "
  * add/remove at least one new child to a node and a new parent to another node
  * indicating that an edge has been created or destroyed
@@ -280,7 +297,7 @@ updateNodeStruc = function(edge) {
   nodeStruc[[t]][["myParent"]] <<- c(nodeStruc[[t]][["myParent"]], f)
 }
 
-clearChildParent = function(){
+clearChildParent = function() {
   for (i in 1:length(nodeStruc)) {
     nodeStruc[[i]][["myChild"]] <<- character()
     nodeStruc[[i]][["myParent"]] <<- character()
@@ -702,20 +719,19 @@ getSavePrior = function(input, output) {
   })
 }
 
-getScore = function(graph, data, output) {
-  output$bnScoreTextBox <- renderPrint({
-    print(paste("Bayesian Network Score:", round(score(graph, data), 4)))
-    print(graph)
-  })
+getScore = function(graph, data) {
+    rtn = paste("Bayesian Network Score:", round(score(graph, data), 4))
+    return(rtn)
 }
 
+#TODO refactor and standardize params
 updateSidbarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
       output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+        print(getScore(dag, mainData))
       })
     } else if (clickType == "node") {
       printNodeProb(input, output)
@@ -724,14 +740,18 @@ updateSidbarUi = function(input, output, dag, mainData) {
       output$savePrior <- renderUI({})
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
-      #CPT radio selected
+      #CPT radio selected | print arc strength unless it was just deleted
       output$shiny_return <- renderPrint({
-        print(arc.strength(dag, mainData, criterion = "bic")[edgeIndex,])
+        if (nrow(getArcStrength(dag, mainData, input$netScore)[edgeIndex,]) == 0) {
+          print(getScore(dag, mainData))
+        } else {
+          print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
+        }
       })
     }
 
   } else if (input$useType == 'BN Score') {
-    getScore(dag, mainData, output)
+    updateBnScoreTextBox(output, dag, mainData)
   } else if (input$useType == 'Evaluate') {
     output$evalTextBox <- renderPrint({
       print("Calculating...")
@@ -755,8 +775,8 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
-getIp = function(localhost) {
-  if (localhost) return("127.0.0.1");
+getIp = function(LOCALHOST) {
+  if (LOCALHOST) return("127.0.0.1");
 
   ipconfig = system("ipconfig", intern=TRUE)
   ipv4 = ipconfig[grep("IPv4", ipconfig)]
@@ -790,4 +810,4 @@ source("class/ui.r")
 source("./class/server.r")
 
 #shinyApp(ui = ui, server = server)
-runApp(list(ui=ui, server=server), host=getIp(localhost), port=80)
+runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)

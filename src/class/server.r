@@ -66,7 +66,7 @@ server <- function(input, output, session) {
 
     if (is.null(clickType)) {
       output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+        print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
       output$savePrior <- renderUI({})
@@ -85,7 +85,7 @@ server <- function(input, output, session) {
 
       #CPT radio selected
       output$shiny_return <- renderPrint({
-        print(arc.strength(dag, mainData, criterion = "bic")[edgeIndex,])
+        print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
   })
@@ -94,7 +94,7 @@ server <- function(input, output, session) {
 
   #BN Score radio selected
   observeEvent(input$useType == 'BN Score', {
-    getScore(dag, mainData, output)
+    updateBnScoreTextBox(output, dag, mainData)
   })
 
 
@@ -126,9 +126,14 @@ server <- function(input, output, session) {
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-      output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
-      })
+    #  output$shiny_return <- renderPrint({
+    #    print(getScore(dag, mainData))
+    #  })
+      updateRadioButtons(session, "useType", "Select Output",
+        c("CP Table", "BN Score", "Evaluate"),
+        selected = "BN Score"
+      )
+      updateBnScoreTextBox(output, dag, mainData)
     }
 
     if (cmd == "deleteCanceled") {
@@ -174,7 +179,7 @@ server <- function(input, output, session) {
 
     visNetworkProxy("myNetId") %>%
       visPhysics(enabled = phys)
-    #print(arc.strength(dag, mainData, criterion = "bic"))
+    #print(getArcStrength(dag, mainData, input$netScore))
     #print(dag)
     #print(edgeDf)
     #print(nodeStruc)
@@ -189,7 +194,7 @@ server <- function(input, output, session) {
     }
 
     #add new (ML) edges
-    #scores:
+    #input$netScore:
       #loglik
       #aic
       #bic
@@ -226,7 +231,7 @@ server <- function(input, output, session) {
     #  dag = cextend(dag)
     #}
 
-    edgeDf <<- getEdgeList(dag, mainData)
+    edgeDf <<- getEdgeList(dag, mainData, input$netScore)
 
     #update NodeStruc
     if (nrow(edgeDf) > 0) {
@@ -338,7 +343,7 @@ server <- function(input, output, session) {
     })
   })
 
-  if (standalone) {
+  if (STANDALONE) {
     # close the R session when Chrome closes
     session$onSessionEnded(function() {
       stopApp()
