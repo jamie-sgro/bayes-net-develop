@@ -25,11 +25,18 @@ server <- function(input, output, session) {
     if (length(files) == 0) {
       files = c("No saved files")
     }
-    output$loadNetworkTextBox <- renderPrint({
-      for (file in files){
-        # Remove .RData from file name
-        print(gsub(".RData", "", file))
-      }
+    parsedFiles = c()
+    for (file in files) {
+      # Remove .RData from file name
+      parsedFiles = c(parsedFiles, gsub(".RData", "", file))
+    }
+    output$loadNetworkSelect = renderUI({
+      selectInput(
+        "loadNetworkSelect",
+        "Select File",
+        c(parsedFiles, "NULL"),
+        selected = "NULL"
+      )
     })
   })
 
