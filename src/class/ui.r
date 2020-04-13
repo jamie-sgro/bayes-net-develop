@@ -85,7 +85,15 @@ body = dashboardBody(
     tabPanel("Network",
              visNetworkOutput("myNetId",
                               height = "450px", width = "480"
-             ))
+   )),
+   tabPanel("File",
+            id = "fileTab",
+            fileInput("file1", "Choose CSV File",
+                multiple = FALSE,
+                accept = c("text/csv",
+                         "text/comma-separated-values,text/plain",
+                         ".csv"))
+            )
   ),
   h4("Prior Beta Distribution"),
   # sliderInput(inputId = "ciSlider",
