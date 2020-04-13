@@ -712,11 +712,9 @@ getSavePrior = function(input, output) {
   })
 }
 
-getScore = function(graph, data, output) {
-  output$bnScoreTextBox <- renderPrint({
-    print(paste("Bayesian Network Score:", round(score(graph, data), 4)))
-    print(graph)
-  })
+getScore = function(graph, data) {
+    rtn = paste("Bayesian Network Score:", round(score(graph, data), 4))
+    return(rtn)
 }
 
 #TODO refactor and standardize params
@@ -726,7 +724,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
 
     if (is.null(clickType)) {
       output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+        print(getScore(dag, mainData))
       })
     } else if (clickType == "node") {
       printNodeProb(input, output)
@@ -735,14 +733,21 @@ updateSidbarUi = function(input, output, dag, mainData) {
       output$savePrior <- renderUI({})
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
-      #CPT radio selected
+      #CPT radio selected | print arc strength unless it was just deleted
       output$shiny_return <- renderPrint({
-        print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
+        if (nrow(getArcStrength(dag, mainData, input$netScore)[edgeIndex,]) == 0) {
+          print(getScore(dag, mainData))
+        } else {
+          print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
+        }
       })
     }
 
   } else if (input$useType == 'BN Score') {
-    getScore(dag, mainData, output)
+    output$bnScoreTextBox <- renderPrint({
+      print(getScore(dag, mainData))
+      print(dag)
+    })
   } else if (input$useType == 'Evaluate') {
     output$evalTextBox <- renderPrint({
       print("Calculating...")

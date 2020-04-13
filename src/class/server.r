@@ -66,7 +66,7 @@ server <- function(input, output, session) {
 
     if (is.null(clickType)) {
       output$shiny_return <- renderPrint({
-        print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+        print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
       output$savePrior <- renderUI({})
@@ -94,7 +94,10 @@ server <- function(input, output, session) {
 
   #BN Score radio selected
   observeEvent(input$useType == 'BN Score', {
-    getScore(dag, mainData, output)
+    output$bnScoreTextBox <- renderPrint({
+      print(getScore(dag, mainData))
+      print(dag)
+    })
   })
 
 
@@ -127,7 +130,7 @@ server <- function(input, output, session) {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
     #  output$shiny_return <- renderPrint({
-    #    print(paste("Bayesian Network Score:", round(score(dag,  mainData), 4)))
+    #    print(getScore(dag, mainData))
     #  })
       updateRadioButtons(session, "useType", "Select Output",
         c("CP Table", "BN Score", "Evaluate"),
