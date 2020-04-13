@@ -15,7 +15,7 @@ checkPackage = function(pack) {
 
 #Import Package
 packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes")
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR")
 
 for (package in packList) {
   checkPackage(package)
@@ -762,7 +762,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
       perf = performance(pred, "auc")
       output$evalTextBox <- renderPrint({
         print("Area under the ROC curve:")
-        print(perf)
+        print(unlist(perf@y.values))
       })
     }
 
