@@ -19,6 +19,20 @@ server <- function(input, output, session) {
   #   )
   # })
 
+  observeEvent(input$fileTabType, {
+    # Files that end with "RData" case sensitive
+    files = list.files(SAVE_FOLDER, pattern="\\.RData$")
+    if (length(files) == 0) {
+      files = c("No saved files")
+    }
+    output$loadNetworkTextBox <- renderPrint({
+      for (file in files){
+        # Remove .RData from file name
+        print(gsub(".RData", "", file))
+      }
+    })
+  })
+
   #setup network
   output$myNetId <- renderVisNetwork({
     visNetwork(nameNodes(mainData), edgeDf) %>%

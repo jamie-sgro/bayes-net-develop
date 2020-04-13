@@ -101,6 +101,16 @@ body = dashboardBody(
           "text/comma-separated-values,text/plain",
           ".csv")
         )
+      ),
+      conditionalPanel(
+        condition = "input.fileTabType == 'Load Network'",
+        verbatimTextOutput("loadNetworkTextBox"),
+        tags$head(tags$style(HTML("#loadNetworkTextBox {
+          font-size: 12px;
+          overflow-y:scroll;
+          max-height: 375px;
+          background: ghostwhite;
+        }")))
       )
     )
   ),
