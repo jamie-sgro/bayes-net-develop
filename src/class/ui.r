@@ -75,7 +75,10 @@ body = dashboardBody(
             condition = "input.saveNetworkSelect == 'Save as new:'",
             textInput("saveNetworkFileName", "New File Name", "")
           ),
-          actionButton("saveNetworkBtn", "Save")
+          conditionalPanel(
+            condition = "input.saveNetworkSelect != 'Save as new:' || input.saveNetworkFileName != ''",
+            actionButton("saveNetworkBtn", "Save")
+          )
         ),
         conditionalPanel(
           condition = "input.fileTabType == 'Load Network'",
