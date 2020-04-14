@@ -19,12 +19,7 @@ server <- function(input, output, session) {
       return()
     }
 
-    print(fileName)
-    # tags$script(HTML(
-    #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
-    # ))
-    # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-    expandSidebar()
+    Sidebar$new()$expand
     setActiveTab(session, "Network")
   })
 
@@ -71,7 +66,9 @@ server <- function(input, output, session) {
     js$enableTab("Graph")
     js$enableTab("Set_CPT")
     js$enableTab("Settings")
-    expandSidebar()
+
+    Sidebar$new()$expand
+
     setActiveTab(session, "Network")
   })
 
