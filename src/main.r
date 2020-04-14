@@ -7,6 +7,12 @@ SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
 
+#### Import Classes ####
+
+source("class/Sidebar.r")
+
+
+
 # js injection to enable and disable tabs
 jsCode = "
 shinyjs.disableTab = function(name) {
@@ -783,18 +789,6 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
-collapseSidebar = function() {
-  shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-}
-
-expandSidebar = function() {
-  shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-}
-
-toggleSidebar = function() {
-  runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-}
-
 getIp = function(LOCALHOST) {
   if (LOCALHOST) return("127.0.0.1");
 
@@ -848,7 +842,7 @@ init = function(output) {
 
 #### Import Package ####
 packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs")
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
 
 for (package in packList) {
   checkPackage(package)
