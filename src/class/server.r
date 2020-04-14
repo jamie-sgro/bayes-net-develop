@@ -1,11 +1,10 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
-  js$disableTab("Network")
-  js$disableTab("Graph")
-  js$disableTab("Set_CPT")
-  js$disableTab("Settings")
+  tab = Tab$new(c("File", "Network", "Graph", "Set_CPT", "Settings"))
+  tab$disable()
 
+  # Save
   observeEvent(input$saveNetworkBtn, {
     fileName = ""
     if (input$saveNetworkSelect == "Save as new:") {
@@ -15,23 +14,61 @@ server <- function(input, output, session) {
     }
 
     if (fileName == "") {
-      print("Nope")
+      stop("Could not get valid save file name")
       return()
     }
 
-    print(fileName)
-    # tags$script(HTML(
-    #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
-    # ))
-    # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-    expandSidebar()
-    setActiveTab(session, "Network")
+    save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, fileName, ".RData"))
+
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, paste("Network Saved:", fileName))
   })
 
+  # Load
   observeEvent(input$loadNetworkBtn, {
-    print("test")
+    fileName = input$loadNetworkSelect
+    if (fileName == "" | fileName == "Select one:") {
+      stop("Could not get valid load file name")
+      return()
+    }
+
+    load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
+    output$myNetId = renderVisNetwork({
+      getVisNetwork(nameNodes(mainData))
+    })
+
+    # update ui tabs and sidebar
+    tab$enable()
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, paste("Network Loaded:", fileName))
   })
 
+  # Import Csv
+  observeEvent(input$newCsv, {
+    if (is.null(input$newCsv)) {
+      return(NULL)
+    }
+    mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+
+    tab$enable()
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, "New Network Imported")
+  })
+
+  # File Controller
   observeEvent(input$fileTabType, {
     # Files that end with "RData" case sensitive
     files = list.files(SAVE_FOLDER, pattern="\\.RData$")
@@ -61,26 +98,10 @@ server <- function(input, output, session) {
     })
   })
 
-  observeEvent(input$newCsv, {
-    if (is.null(input$newCsv)) {
-      return(NULL)
-    }
-    mainData <<- read.csv(input$newCsv$datapath)
-    init(output)
-    js$enableTab("Network")
-    js$enableTab("Graph")
-    js$enableTab("Set_CPT")
-    js$enableTab("Settings")
-    expandSidebar()
-    setActiveTab(session, "Network")
-  })
-
   #setup network
   output$myNetId <- renderVisNetwork({
     getVisNetwork()
   })
-
-
 
   #update graph changes
   observe({
@@ -121,7 +142,7 @@ server <- function(input, output, session) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
@@ -140,7 +161,7 @@ server <- function(input, output, session) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
@@ -168,23 +189,20 @@ server <- function(input, output, session) {
     if (cmd == "addEdge") {
       errMsg = validEdge(input$myNetId_graphChange, edgeDf)
       if (valid(errMsg)) {
-        output$shiny_return <- renderPrint({
+        output$cptTextBox = renderPrint({
           print(errMsg)
         })
         return()
       }
 
       addEdge(input, output, edgeDf)
-      updateSidbarUi(input, output, dag, mainData)
+      updateSidebarUi(input, output, dag, mainData)
       return()
     }
 
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-    #  output$shiny_return <- renderPrint({
-    #    print(getScore(dag, mainData))
-    #  })
       updateRadioButtons(session, "useType", "Select Output",
         c("CP Table", "BN Score", "Evaluate"),
         selected = "BN Score"
@@ -304,16 +322,16 @@ server <- function(input, output, session) {
     visNetworkProxy("myNetId") %>%
       visUpdateEdges(edges = edgeDf)
 
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$useType, {
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$savePriorButton, {
     if (is.null(input$current_node_id)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print("No node selected")
       })
       return()
@@ -373,7 +391,7 @@ server <- function(input, output, session) {
       })
     }
 
-    output$shiny_return <- renderPrint({
+    output$cptTextBox = renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })
@@ -397,7 +415,7 @@ server <- function(input, output, session) {
       responseList = c(responseList, input[[inputName]])
     }
 
-    output$shiny_return <- renderPrint({
+    output$cptTextBox = renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })

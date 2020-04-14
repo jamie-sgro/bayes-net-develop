@@ -7,6 +7,13 @@ SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
 
+#### Import Classes ####
+
+source("class/Sidebar.r")
+source("class/Tab.r")
+
+
+
 # js injection to enable and disable tabs
 jsCode = "
 shinyjs.disableTab = function(name) {
@@ -94,10 +101,10 @@ nameNodes = function(rawData) {
 }
 
 "
-* take all column names and return a network datastructure readable by bnlearn
-* @param  {list} rawData unmutated data read in from a function like read.csv
-* @return {[type]} a network structure for a graph with no edges
-* - i.e. data with headers 'a','b','c' would return '[a][b][c]'
+  * take all column names and return a network datastructure readable by bnlearn
+  * @param  {list} rawData unmutated data read in from a function like read.csv
+  * @return {[type]} a network structure for a graph with no edges
+  * - i.e. data with headers 'a','b','c' would return '[a][b][c]'
 "
 getModString = function(rawData) {
   n = length(rawData)
@@ -357,26 +364,17 @@ idToLabel = function(input) {
 }
 
 printNodeProb = function(input, output) {
-  #TODO: find out why clicking and dragging whitespace calls this function
-  #(only when a node is currently selected)
+  # print(nodeStruc)
+  # print(idToLabel(input))
   if(valid(input$myNetId_nodes)) {
     if (valid(input$current_node_id)) {
-
-      # nodeLabel = idToLabel(input)
-      # fit <- bn.fit(dag, mainData)
-      # #Post node values in sidebar
-      # output$shiny_return <- renderPrint({
-      #   fit[as.character(nodeLabel)]
-      # })
-      # updateSpreadsheet(nodeLabel, output)
-
       nodeLabel = idToLabel(input)
       parent = nodeStruc[[nodeLabel]][["myParent"]]
       nodesList = c(nodeLabel, parent)
 
       #compile responseList (from parents)
       responseList = generateList(length(nodesList), "Either")
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         getMultiPosterior(nodesList, responseList, mainData)
       })
       updateSpreadsheet(nodeLabel, output)
@@ -513,7 +511,7 @@ getMultiPosterior = function(nameList, resp, db) {
 
     #Check for catagorical variables
     if (length(levels(v[[i]])) > 2) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print("Please ensure each variable has up to two possible responses")
       })
       return()
@@ -727,18 +725,12 @@ getScore = function(graph, data) {
     return(rtn)
 }
 
-setActiveTab = function(session, tabName) {
-  updateTabsetPanel(session, "tabset",
-    selected = tabName
-  )
-}
-
-updateSidbarUi = function(input, output, dag, mainData) {
+updateSidebarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getScore(dag, mainData))
       })
     } else if (clickType == "node") {
@@ -749,7 +741,7 @@ updateSidbarUi = function(input, output, dag, mainData) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected | print arc strength unless it was just deleted
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         if (nrow(getArcStrength(dag, mainData, input$netScore)[edgeIndex,]) == 0) {
           print(getScore(dag, mainData))
         } else {
@@ -781,18 +773,6 @@ updateSidbarUi = function(input, output, dag, mainData) {
       })
     })
   }
-}
-
-collapseSidebar = function() {
-  shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-}
-
-expandSidebar = function() {
-  shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-}
-
-toggleSidebar = function() {
-  runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
 }
 
 getIp = function(LOCALHOST) {
@@ -848,7 +828,7 @@ init = function(output) {
 
 #### Import Package ####
 packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs")
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
 
 for (package in packList) {
   checkPackage(package)
@@ -887,8 +867,6 @@ source("class/ui.r")
 
 source("./class/server.r")
 
-#load(paste0(SAVE_FOLDER, "savename.RData"))
-#save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, "savename.RData"))
 
 #shinyApp(ui = ui, server = server)
 runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)
