@@ -19,7 +19,7 @@ server <- function(input, output, session) {
     #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
     # ))
     # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-    toggleSidebar()
+    expandSidebar()
     setActiveTab(session, "Network")
   })
 
@@ -62,7 +62,7 @@ server <- function(input, output, session) {
     }
     mainData <<- read.csv(input$newCsv$datapath)
     init(output)
-    toggleSidebar()
+    expandSidebar()
     setActiveTab(session, "Network")
   })
 

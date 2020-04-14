@@ -759,6 +759,14 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
+collapseSidebar = function() {
+  shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+}
+
+expandSidebar = function() {
+  shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+}
+
 toggleSidebar = function() {
   runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
 }
