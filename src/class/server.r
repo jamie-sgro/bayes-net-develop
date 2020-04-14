@@ -87,12 +87,12 @@ server <- function(input, output, session) {
 
 
   #On new tab click
-  observeEvent(input$bodyTab, {
-    if (input$bodyTab == "Graph") {
+  observeEvent(input$tabset, {
+    if (input$tabset == "Graph") {
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
-    } else if (input$bodyTab == "Set CPT") {
+    } else if (input$tabset == "Set CPT") {
       observe({
         getSelectState(input, output)
         getSaveState(input, output)
@@ -342,7 +342,7 @@ server <- function(input, output, session) {
     nodesList = c(nodeLabel, parent)
 
     #Try getting parameters from 'Set CPT' else assume 'either'
-    if (input$bodyTab == "Set CPT") {
+    if (input$tabset == "Set CPT") {
       responseList = vector()
       for (i in 1:length(nodesList)) {
         inputName = paste("select", as.character(i), sep = "")
@@ -352,7 +352,7 @@ server <- function(input, output, session) {
       responseList = generateList(length(nodesList), "Either")
     }
 
-    if (input$bodyTab == "Graph") {
+    if (input$tabset == "Graph") {
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
