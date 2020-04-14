@@ -1,10 +1,8 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
-  js$disableTab("Network")
-  js$disableTab("Graph")
-  js$disableTab("Set_CPT")
-  js$disableTab("Settings")
+  tab = Tab$new(c("Network", "Graph", "Set_CPT", "Settings"))
+  tab$disable()
 
   observeEvent(input$saveNetworkBtn, {
     fileName = ""
@@ -62,10 +60,7 @@ server <- function(input, output, session) {
     }
     mainData <<- read.csv(input$newCsv$datapath)
     init(output)
-    js$enableTab("Network")
-    js$enableTab("Graph")
-    js$enableTab("Set_CPT")
-    js$enableTab("Settings")
+    tab$enable()
 
     Sidebar$new()$expand
 
@@ -172,7 +167,7 @@ server <- function(input, output, session) {
       }
 
       addEdge(input, output, edgeDf)
-      updateSidbarUi(input, output, dag, mainData)
+      updateSidebarUi(input, output, dag, mainData)
       return()
     }
 
@@ -301,11 +296,11 @@ server <- function(input, output, session) {
     visNetworkProxy("myNetId") %>%
       visUpdateEdges(edges = edgeDf)
 
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$useType, {
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$savePriorButton, {

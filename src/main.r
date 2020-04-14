@@ -10,6 +10,7 @@ DEFAULT_STRUCALGO = "hc"
 #### Import Classes ####
 
 source("class/Sidebar.r")
+source("class/Tab.r")
 
 
 
@@ -100,10 +101,10 @@ nameNodes = function(rawData) {
 }
 
 "
-* take all column names and return a network datastructure readable by bnlearn
-* @param  {list} rawData unmutated data read in from a function like read.csv
-* @return {[type]} a network structure for a graph with no edges
-* - i.e. data with headers 'a','b','c' would return '[a][b][c]'
+  * take all column names and return a network datastructure readable by bnlearn
+  * @param  {list} rawData unmutated data read in from a function like read.csv
+  * @return {[type]} a network structure for a graph with no edges
+  * - i.e. data with headers 'a','b','c' would return '[a][b][c]'
 "
 getModString = function(rawData) {
   n = length(rawData)
@@ -739,7 +740,7 @@ setActiveTab = function(session, tabName) {
   )
 }
 
-updateSidbarUi = function(input, output, dag, mainData) {
+updateSidebarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)
 
