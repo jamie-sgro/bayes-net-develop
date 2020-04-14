@@ -17,12 +17,25 @@ server <- function(input, output, session) {
       return()
     }
 
-    Sidebar$new()$expand
-    tab$setActive(session, "Network")
+    save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, fileName, ".RData"))
   })
 
   observeEvent(input$loadNetworkBtn, {
-    print("test")
+    fileName = input$loadNetworkSelect
+    if (fileName == "" | fileName == "Select one:") {
+      stop("Could not get valid load file name")
+      return()
+    }
+
+    load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
+
+    # mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+    # mainData <<- mainData
+
+    tab$enable()
+    Sidebar$new()$expand
+    tab$setActive(session, "Network")
   })
 
   observeEvent(input$fileTabType, {
@@ -60,10 +73,9 @@ server <- function(input, output, session) {
     }
     mainData <<- read.csv(input$newCsv$datapath)
     init(output)
+
     tab$enable()
-
     Sidebar$new()$expand
-
     tab$setActive(session, "Network")
   })
 

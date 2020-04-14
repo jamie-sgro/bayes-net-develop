@@ -876,8 +876,6 @@ source("class/ui.r")
 
 source("./class/server.r")
 
-#load(paste0(SAVE_FOLDER, "savename.RData"))
-#save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, "savename.RData"))
 
 #shinyApp(ui = ui, server = server)
 runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)
