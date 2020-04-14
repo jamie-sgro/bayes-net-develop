@@ -20,8 +20,12 @@ server <- function(input, output, session) {
 
     save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, fileName, ".RData"))
 
-    Sidebar$new()$expand
+    sidebar = Sidebar$new()
+    sidebar$expand
     tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, paste("Network Saved:", fileName))
   })
 
   # Load
@@ -44,7 +48,7 @@ server <- function(input, output, session) {
     tab$setActive(session, "Network")
 
     # screen print
-    # sidebar$printActiveTextBox(input, output, paste("Network Loaded:", fileName))
+    sidebar$printActiveTextBox(input, output, paste("Network Loaded:", fileName))
   })
 
   # Import Csv
@@ -56,8 +60,12 @@ server <- function(input, output, session) {
     init(output)
 
     tab$enable()
-    Sidebar$new()$expand
+    sidebar = Sidebar$new()
+    sidebar$expand
     tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, "New Network Imported")
   })
 
   # File Controller
