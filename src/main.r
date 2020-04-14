@@ -3,8 +3,37 @@ SUBDATA = F
 STANDALONE = F
 LOCALHOST = F
 
+SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
+
+# js injection to enable and disable tabs
+jsCode = "
+shinyjs.disableTab = function(name) {
+  var tab = $('.nav li a[data-value=' + name + ']');
+  tab.bind('click.tab', function(e) {
+    e.preventDefault();
+    return false;
+  });
+  tab.addClass('disabled');
+}
+
+shinyjs.enableTab = function(name) {
+  var tab = $('.nav li a[data-value=' + name + ']');
+  tab.unbind('click.tab');
+  tab.removeClass('disabled');
+}
+"
+
+css = "
+.nav li a.disabled {
+  background-color: #aaa !important;
+  color: #333 !important;
+  cursor: not-allowed !important;
+  border-color: #aaa !important;
+}"
+
+#### Functions ####
 
 checkPackage = function(pack) {
   if (!is.element(pack, installed.packages()[,1])) {
@@ -13,58 +42,29 @@ checkPackage = function(pack) {
   }
 }
 
-#Import Package
-packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes", "ROCR")
+cleanDataset = function(df) {
+  # Force to bnlearn supported data type
+  for (i in 1:ncol(df)) {
+    df[,i] = as.factor(df[,i])
+  }
 
-for (package in packList) {
-  checkPackage(package)
-  library(package, character.only = TRUE)
+  # Force complete case analysis
+  if (length(which(is.na(df))) > 0) {
+    print(paste("Removed", length(which(is.na(df))), "incomplete cases."))
+    df = df[complete.cases(df),]
+  }
+
+  #Get Subset
+  if (SUBDATA) {
+    subata <- sample.int(n = nrow(df),
+      size = floor(0.05*nrow(df)),
+      replace = F)
+    df <- df[subata, ]
+  }
+
+  return (df)
 }
 
-#### Import Data ####
-setwd(getwd())
-
-if (STANDALONE) {
-  source(paste(getwd(),"/fsoPath.dat", sep = ""))
-  mainData = read.csv(filePath,
-                      fileEncoding="UTF-8-BOM")
-} else {
-  mainData = read.csv("data/hcp_dataset.csv",
-                      fileEncoding="UTF-8-BOM")
-}
-
-#mainData = read.csv("HCP Household Heads Prop Sample.V2.csv")
-#mainData = read.csv("afsun_dataset.csv")
-#mainData = read.csv("pseudodata.csv")
-#mainData = coronary
-#coronary
-#asia
-#learning.test
-
-
-# Force to bnlearn supported data type
-for (i in 1:ncol(mainData)) {
-  mainData[,i] = as.factor(mainData[,i])
-}
-
-# Force complete case analysis
-if (length(which(is.na(mainData))) > 0) {
-  print(paste("Removed", length(which(is.na(mainData))), "incomplete cases."))
-  mainData = mainData[complete.cases(mainData),]
-}
-
-#Get Subset
-if (SUBDATA) {
-  subata <- sample.int(n = nrow(mainData),
-                       size = floor(0.05*nrow(mainData)),
-                       replace = F)
-  mainData <- mainData[subata, ]
-}
-
-
-
-#### Functions ####
 
 valid = function(obj) {
   return(!is.null(obj))
@@ -720,11 +720,19 @@ getSavePrior = function(input, output) {
 }
 
 getScore = function(graph, data) {
+    if (is.null(graph)) {
+      return("Please import dataset from 'File' tab.")
+    }
     rtn = paste("Bayesian Network Score:", round(score(graph, data), 4))
     return(rtn)
 }
 
-#TODO refactor and standardize params
+setActiveTab = function(session, tabName) {
+  updateTabsetPanel(session, "tabset",
+    selected = tabName
+  )
+}
+
 updateSidbarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)
@@ -775,6 +783,18 @@ updateSidbarUi = function(input, output, dag, mainData) {
   }
 }
 
+collapseSidebar = function() {
+  shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+}
+
+expandSidebar = function() {
+  shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+}
+
+toggleSidebar = function() {
+  runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
+}
+
 getIp = function(LOCALHOST) {
   if (LOCALHOST) return("127.0.0.1");
 
@@ -784,15 +804,73 @@ getIp = function(LOCALHOST) {
   return(ip)
 }
 
+getVisNetwork = function(df) {
+  if (missing(df)) {
+    df = data.frame(id = 1, hidden = TRUE)
+  }
+  return (visNetwork(df, edgeDf) %>%
+    visPhysics(solver = "barnesHut",
+               minVelocity = 0.1,
+               forceAtlas2Based = list(gravitationalConstant = -150)) %>%
+    visOptions(manipulation = TRUE, highlightNearest = FALSE) %>%
+    visEdges(arrows = 'to') %>%
+    visEvents(type = "once", beforeDrawing = "function(init) {
+              Shiny.onInputChange('getNodeStruc','init');
+    }") %>%
+    visEvents(selectNode = "function(n) {
+              Shiny.onInputChange('current_node_id', n.nodes);
+              }",
+              dragging = "function(n) {
+              Shiny.onInputChange('current_node_id', n.nodes);
+              }",
+              deselectNode = "function(n) {
+              Shiny.onInputChange('current_node_id', n.nodes);
+              }",
+              selectEdge = "function(e) {
+              Shiny.onInputChange('current_edge_id', e.edges);
+    }") %>%
+    visEvents(click = "function(click) {
+              Shiny.onInputChange('selectNode', click.nodes)
+              Shiny.onInputChange('selectEdge', click.edges)
+    }"))
+}
 
+init = function(output) {
+  # Create and plot the network structure.
+  mainData <<- cleanDataset(mainData)
+  dag <<- model2network(getModString(mainData))
+  edgeDf <<- getEdgeList(dag, mainData)
 
-#### CREATE DAG ####
+  output$myNetId = renderVisNetwork({
+    getVisNetwork(nameNodes(mainData))
+  })
+}
 
-# create and plot the network structure.
-dag = model2network(getModString(mainData))
+#### Import Package ####
+packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs")
 
-#Declare Global Variable
-edgeDf = getEdgeList(dag, mainData)
+for (package in packList) {
+  checkPackage(package)
+  library(package, character.only = TRUE)
+}
+
+#### Import Data ####
+setwd(getwd())
+
+# if (STANDALONE) {
+#   source(paste(getwd(),"/fsoPath.dat", sep = ""))
+#   mainData = read.csv(filePath, fileEncoding="UTF-8-BOM")
+# } else {
+#   mainData = read.csv("data/hcp_dataset.csv", fileEncoding="UTF-8-BOM")
+# }
+
+#mainData = coronary
+#coronary, asia, learning.test
+
+mainData = NULL
+dag = NULL
+edgeDf = NULL
 
 
 ########## #
@@ -808,6 +886,9 @@ source("class/ui.r")
 ############## #
 
 source("./class/server.r")
+
+#load(paste0(SAVE_FOLDER, "savename.RData"))
+#save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, "savename.RData"))
 
 #shinyApp(ui = ui, server = server)
 runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)

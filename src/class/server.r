@@ -1,33 +1,83 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
+  js$disableTab("Network")
+  js$disableTab("Graph")
+  js$disableTab("Set_CPT")
+  js$disableTab("Settings")
+
+  observeEvent(input$saveNetworkBtn, {
+    fileName = ""
+    if (input$saveNetworkSelect == "Save as new:") {
+      fileName = input$saveNetworkFileName
+    } else {
+      fileName = input$saveNetworkSelect
+    }
+
+    if (fileName == "") {
+      print("Nope")
+      return()
+    }
+
+    print(fileName)
+    # tags$script(HTML(
+    #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
+    # ))
+    # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
+    expandSidebar()
+    setActiveTab(session, "Network")
+  })
+
+  observeEvent(input$loadNetworkBtn, {
+    print("test")
+  })
+
+  observeEvent(input$fileTabType, {
+    # Files that end with "RData" case sensitive
+    files = list.files(SAVE_FOLDER, pattern="\\.RData$")
+    if (length(files) == 0) {
+      files = c("No saved files")
+    }
+    parsedFiles = c()
+    for (file in files) {
+      # Remove .RData from file name
+      parsedFiles = c(parsedFiles, gsub(".RData", "", file))
+    }
+    output$saveNetworkSelect = renderUI({
+      selectInput(
+        "saveNetworkSelect",
+        "Select File",
+        c(parsedFiles, "Save as new:"),
+        selected = "Save as new:"
+      )
+    })
+    output$loadNetworkSelect = renderUI({
+      selectInput(
+        "loadNetworkSelect",
+        "Select File",
+        c(parsedFiles, "Select one:"),
+        selected = "Select one:"
+      )
+    })
+  })
+
+  observeEvent(input$newCsv, {
+    if (is.null(input$newCsv)) {
+      return(NULL)
+    }
+    mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+    js$enableTab("Network")
+    js$enableTab("Graph")
+    js$enableTab("Set_CPT")
+    js$enableTab("Settings")
+    expandSidebar()
+    setActiveTab(session, "Network")
+  })
+
   #setup network
   output$myNetId <- renderVisNetwork({
-    visNetwork(nameNodes(mainData), edgeDf) %>%
-      visPhysics(solver = "barnesHut",
-                 minVelocity = 0.1,
-                 forceAtlas2Based = list(gravitationalConstant = -150)) %>%
-      visOptions(manipulation = TRUE, highlightNearest = FALSE) %>%
-      visEdges(arrows = 'to') %>%
-      visEvents(type = "once", beforeDrawing = "function(init) {
-                Shiny.onInputChange('getNodeStruc','init');
-      }") %>%
-      visEvents(selectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                dragging = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                deselectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                selectEdge = "function(e) {
-                Shiny.onInputChange('current_edge_id', e.edges);
-      }") %>%
-      visEvents(click = "function(click) {
-                Shiny.onInputChange('selectNode', click.nodes)
-                Shiny.onInputChange('selectEdge', click.edges)
-      }")
+    getVisNetwork()
   })
 
 
@@ -46,12 +96,18 @@ server <- function(input, output, session) {
 
 
   #On new tab click
-  observeEvent(input$bodyTab, {
-    if (input$bodyTab == "Graph") {
+  observeEvent(input$tabset, {
+    if (input$tabset == "Graph") {
+      if (is.null(input$current_node_id)) {
+        output$priorPlot <- renderPlot({
+          plot(0, type="n", axes=FALSE, ylab = "", xlab = "", main="Please select a node to generate a graph")
+        })
+        return()
+      }
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
-    } else if (input$bodyTab == "Set CPT") {
+    } else if (input$tabset == "Set_CPT") {
       observe({
         getSelectState(input, output)
         getSaveState(input, output)
@@ -186,8 +242,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$learnNetButton, {
-    #remove all edges
+    if (is.null(edgeDf)) {
+      return()
+    }
 
+    #remove all edges
     if (nrow(edgeDf) > 0) {
       clearChildParent()
       removeAllEdges(edgeDf, dag)
@@ -297,8 +356,8 @@ server <- function(input, output, session) {
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
-    #Try getting perameters from 'Set CPT' else assume 'either'
-    if (input$bodyTab == "Set CPT") {
+    #Try getting parameters from 'Set_CPT' else assume 'either'
+    if (input$tabset == "Set_CPT") {
       responseList = vector()
       for (i in 1:length(nodesList)) {
         inputName = paste("select", as.character(i), sep = "")
@@ -308,7 +367,7 @@ server <- function(input, output, session) {
       responseList = generateList(length(nodesList), "Either")
     }
 
-    if (input$bodyTab == "Graph") {
+    if (input$tabset == "Graph") {
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
