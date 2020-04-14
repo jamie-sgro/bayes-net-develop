@@ -1,5 +1,21 @@
 Sidebar = R6Class("Sidebar",
-  public = list(),
+  public = list(
+    printActiveTextBox = function(input, output, msg) {
+      if (input$useType == "CP Table") {
+        output$cptTextBox = renderPrint({
+          print(msg)
+        })
+      } else if (input$useType == "BN Score") {
+        output$bnScoreTextBox <- renderPrint({
+          print(msg)
+        })
+      } else if (input$useType == "Evaluate") {
+        output$evalTextBox <- renderPrint({
+          print(msg)
+        })
+      }
+    }
+  ),
   active = list(
     collapse = function() {
       shinyjs::addClass(selector = "body", class = "sidebar-collapse")

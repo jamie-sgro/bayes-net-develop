@@ -364,26 +364,17 @@ idToLabel = function(input) {
 }
 
 printNodeProb = function(input, output) {
-  #TODO: find out why clicking and dragging whitespace calls this function
-  #(only when a node is currently selected)
+  # print(nodeStruc)
+  # print(idToLabel(input))
   if(valid(input$myNetId_nodes)) {
     if (valid(input$current_node_id)) {
-
-      # nodeLabel = idToLabel(input)
-      # fit <- bn.fit(dag, mainData)
-      # #Post node values in sidebar
-      # output$cptTextBox <- renderPrint({
-      #   fit[as.character(nodeLabel)]
-      # })
-      # updateSpreadsheet(nodeLabel, output)
-
       nodeLabel = idToLabel(input)
       parent = nodeStruc[[nodeLabel]][["myParent"]]
       nodesList = c(nodeLabel, parent)
 
       #compile responseList (from parents)
       responseList = generateList(length(nodesList), "Either")
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         getMultiPosterior(nodesList, responseList, mainData)
       })
       updateSpreadsheet(nodeLabel, output)
@@ -520,7 +511,7 @@ getMultiPosterior = function(nameList, resp, db) {
 
     #Check for catagorical variables
     if (length(levels(v[[i]])) > 2) {
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         print("Please ensure each variable has up to two possible responses")
       })
       return()
@@ -739,7 +730,7 @@ updateSidebarUi = function(input, output, dag, mainData) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getScore(dag, mainData))
       })
     } else if (clickType == "node") {
@@ -750,7 +741,7 @@ updateSidebarUi = function(input, output, dag, mainData) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected | print arc strength unless it was just deleted
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         if (nrow(getArcStrength(dag, mainData, input$netScore)[edgeIndex,]) == 0) {
           print(getScore(dag, mainData))
         } else {

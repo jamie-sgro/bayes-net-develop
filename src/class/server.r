@@ -4,6 +4,7 @@ server <- function(input, output, session) {
   tab = Tab$new(c("File", "Network", "Graph", "Set_CPT", "Settings"))
   tab$disable()
 
+  # Save
   observeEvent(input$saveNetworkBtn, {
     fileName = ""
     if (input$saveNetworkSelect == "Save as new:") {
@@ -23,6 +24,7 @@ server <- function(input, output, session) {
     tab$setActive(session, "Network")
   })
 
+  # Load
   observeEvent(input$loadNetworkBtn, {
     fileName = input$loadNetworkSelect
     if (fileName == "" | fileName == "Select one:") {
@@ -37,19 +39,28 @@ server <- function(input, output, session) {
 
     # update ui tabs and sidebar
     tab$enable()
-    Sidebar$new()$expand
+    sidebar = Sidebar$new()
+    sidebar$expand
     tab$setActive(session, "Network")
 
     # screen print
-    updateRadioButtons(session, "useType", "Select Output",
-      c("CP Table", "BN Score", "Evaluate"),
-      selected = "BN Score"
-    )
-    output$bnScoreTextBox <- renderPrint({
-      print(paste("Network Loaded:", fileName))
-    })
+    # sidebar$printActiveTextBox(input, output, paste("Network Loaded:", fileName))
   })
 
+  # Import Csv
+  observeEvent(input$newCsv, {
+    if (is.null(input$newCsv)) {
+      return(NULL)
+    }
+    mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+
+    tab$enable()
+    Sidebar$new()$expand
+    tab$setActive(session, "Network")
+  })
+
+  # File Controller
   observeEvent(input$fileTabType, {
     # Files that end with "RData" case sensitive
     files = list.files(SAVE_FOLDER, pattern="\\.RData$")
@@ -79,24 +90,10 @@ server <- function(input, output, session) {
     })
   })
 
-  observeEvent(input$newCsv, {
-    if (is.null(input$newCsv)) {
-      return(NULL)
-    }
-    mainData <<- read.csv(input$newCsv$datapath)
-    init(output)
-
-    tab$enable()
-    Sidebar$new()$expand
-    tab$setActive(session, "Network")
-  })
-
   #setup network
   output$myNetId <- renderVisNetwork({
     getVisNetwork()
   })
-
-
 
   #update graph changes
   observe({
@@ -137,7 +134,7 @@ server <- function(input, output, session) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
@@ -156,7 +153,7 @@ server <- function(input, output, session) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
@@ -184,7 +181,7 @@ server <- function(input, output, session) {
     if (cmd == "addEdge") {
       errMsg = validEdge(input$myNetId_graphChange, edgeDf)
       if (valid(errMsg)) {
-        output$cptTextBox <- renderPrint({
+        output$cptTextBox = renderPrint({
           print(errMsg)
         })
         return()
@@ -198,9 +195,6 @@ server <- function(input, output, session) {
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-    #  output$cptTextBox <- renderPrint({
-    #    print(getScore(dag, mainData))
-    #  })
       updateRadioButtons(session, "useType", "Select Output",
         c("CP Table", "BN Score", "Evaluate"),
         selected = "BN Score"
@@ -329,7 +323,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$savePriorButton, {
     if (is.null(input$current_node_id)) {
-      output$cptTextBox <- renderPrint({
+      output$cptTextBox = renderPrint({
         print("No node selected")
       })
       return()
@@ -389,7 +383,7 @@ server <- function(input, output, session) {
       })
     }
 
-    output$cptTextBox <- renderPrint({
+    output$cptTextBox = renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })
@@ -413,7 +407,7 @@ server <- function(input, output, session) {
       responseList = c(responseList, input[[inputName]])
     }
 
-    output$cptTextBox <- renderPrint({
+    output$cptTextBox = renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })
