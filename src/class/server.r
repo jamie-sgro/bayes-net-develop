@@ -18,6 +18,9 @@ server <- function(input, output, session) {
     }
 
     save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, fileName, ".RData"))
+
+    Sidebar$new()$expand
+    tab$setActive(session, "Network")
   })
 
   observeEvent(input$loadNetworkBtn, {
@@ -28,10 +31,11 @@ server <- function(input, output, session) {
     }
 
     load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
+    output$myNetId = renderVisNetwork({
+      getVisNetwork(nameNodes(mainData))
+    })
 
-    # mainData <<- read.csv(input$newCsv$datapath)
-    init(output)
-    # mainData <<- mainData
+    # init(output)
 
     tab$enable()
     Sidebar$new()$expand
