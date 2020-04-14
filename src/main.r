@@ -734,12 +734,6 @@ getScore = function(graph, data) {
     return(rtn)
 }
 
-setActiveTab = function(session, tabName) {
-  updateTabsetPanel(session, "tabset",
-    selected = tabName
-  )
-}
-
 updateSidebarUi = function(input, output, dag, mainData) {
   if (input$useType == 'CP Table') {
     clickType = getClickType(input)

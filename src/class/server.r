@@ -1,7 +1,7 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
-  tab = Tab$new(c("Network", "Graph", "Set_CPT", "Settings"))
+  tab = Tab$new(c("File", "Network", "Graph", "Set_CPT", "Settings"))
   tab$disable()
 
   observeEvent(input$saveNetworkBtn, {
@@ -13,12 +13,12 @@ server <- function(input, output, session) {
     }
 
     if (fileName == "") {
-      print("Nope")
+      stop("Could not get valid save file name")
       return()
     }
 
     Sidebar$new()$expand
-    setActiveTab(session, "Network")
+    tab$setActive(session, "Network")
   })
 
   observeEvent(input$loadNetworkBtn, {
@@ -64,7 +64,7 @@ server <- function(input, output, session) {
 
     Sidebar$new()$expand
 
-    setActiveTab(session, "Network")
+    tab$setActive(session, "Network")
   })
 
   #setup network

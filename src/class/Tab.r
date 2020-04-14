@@ -13,6 +13,11 @@ Tab = R6Class("Tab",
       for (tab in self$tabList) {
         js$enableTab(tab)
       }
+    },
+    setActive = function(session, tabName) {
+      updateTabsetPanel(session, "tabset",
+        selected = tabName
+      )
     }
   ),
   active = list(),
