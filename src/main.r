@@ -372,7 +372,7 @@ printNodeProb = function(input, output) {
       # nodeLabel = idToLabel(input)
       # fit <- bn.fit(dag, mainData)
       # #Post node values in sidebar
-      # output$shiny_return <- renderPrint({
+      # output$cptTextBox <- renderPrint({
       #   fit[as.character(nodeLabel)]
       # })
       # updateSpreadsheet(nodeLabel, output)
@@ -383,7 +383,7 @@ printNodeProb = function(input, output) {
 
       #compile responseList (from parents)
       responseList = generateList(length(nodesList), "Either")
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         getMultiPosterior(nodesList, responseList, mainData)
       })
       updateSpreadsheet(nodeLabel, output)
@@ -520,7 +520,7 @@ getMultiPosterior = function(nameList, resp, db) {
 
     #Check for catagorical variables
     if (length(levels(v[[i]])) > 2) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         print("Please ensure each variable has up to two possible responses")
       })
       return()
@@ -739,7 +739,7 @@ updateSidebarUi = function(input, output, dag, mainData) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         print(getScore(dag, mainData))
       })
     } else if (clickType == "node") {
@@ -750,7 +750,7 @@ updateSidebarUi = function(input, output, dag, mainData) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected | print arc strength unless it was just deleted
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         if (nrow(getArcStrength(dag, mainData, input$netScore)[edgeIndex,]) == 0) {
           print(getScore(dag, mainData))
         } else {

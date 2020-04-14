@@ -9,8 +9,8 @@ sidebar = dashboardSidebar(
   box(width = 12, height = 400, status = "info",
     conditionalPanel(
       condition = "input.useType == 'CP Table'",
-      verbatimTextOutput("shiny_return"),
-      tags$head(tags$style(HTML("#shiny_return {
+      verbatimTextOutput("cptTextBox"),
+      tags$head(tags$style(HTML("#cptTextBox {
         font-size: 12px;
         overflow-y:scroll;
         max-height: 375px;

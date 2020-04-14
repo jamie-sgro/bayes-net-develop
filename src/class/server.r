@@ -35,11 +35,19 @@ server <- function(input, output, session) {
       getVisNetwork(nameNodes(mainData))
     })
 
-    # init(output)
-
+    # update ui tabs and sidebar
     tab$enable()
     Sidebar$new()$expand
     tab$setActive(session, "Network")
+
+    # screen print
+    updateRadioButtons(session, "useType", "Select Output",
+      c("CP Table", "BN Score", "Evaluate"),
+      selected = "BN Score"
+    )
+    output$bnScoreTextBox <- renderPrint({
+      print(paste("Network Loaded:", fileName))
+    })
   })
 
   observeEvent(input$fileTabType, {
@@ -129,7 +137,7 @@ server <- function(input, output, session) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
@@ -148,7 +156,7 @@ server <- function(input, output, session) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
@@ -176,7 +184,7 @@ server <- function(input, output, session) {
     if (cmd == "addEdge") {
       errMsg = validEdge(input$myNetId_graphChange, edgeDf)
       if (valid(errMsg)) {
-        output$shiny_return <- renderPrint({
+        output$cptTextBox <- renderPrint({
           print(errMsg)
         })
         return()
@@ -190,7 +198,7 @@ server <- function(input, output, session) {
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-    #  output$shiny_return <- renderPrint({
+    #  output$cptTextBox <- renderPrint({
     #    print(getScore(dag, mainData))
     #  })
       updateRadioButtons(session, "useType", "Select Output",
@@ -321,7 +329,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$savePriorButton, {
     if (is.null(input$current_node_id)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox <- renderPrint({
         print("No node selected")
       })
       return()
@@ -381,7 +389,7 @@ server <- function(input, output, session) {
       })
     }
 
-    output$shiny_return <- renderPrint({
+    output$cptTextBox <- renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })
@@ -405,7 +413,7 @@ server <- function(input, output, session) {
       responseList = c(responseList, input[[inputName]])
     }
 
-    output$shiny_return <- renderPrint({
+    output$cptTextBox <- renderPrint({
       getMultiPosterior(nodesList, responseList, mainData)
     })
   })
