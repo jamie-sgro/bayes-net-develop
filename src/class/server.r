@@ -1,6 +1,11 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
+  js$disableTab("Network")
+  js$disableTab("Graph")
+  js$disableTab("Set_CPT")
+  js$disableTab("Settings")
+
   observeEvent(input$saveNetworkBtn, {
     fileName = ""
     if (input$saveNetworkSelect == "Save as new:") {
@@ -62,6 +67,10 @@ server <- function(input, output, session) {
     }
     mainData <<- read.csv(input$newCsv$datapath)
     init(output)
+    js$enableTab("Network")
+    js$enableTab("Graph")
+    js$enableTab("Set_CPT")
+    js$enableTab("Settings")
     expandSidebar()
     setActiveTab(session, "Network")
   })
@@ -89,10 +98,16 @@ server <- function(input, output, session) {
   #On new tab click
   observeEvent(input$tabset, {
     if (input$tabset == "Graph") {
+      if (is.null(input$current_node_id)) {
+        output$priorPlot <- renderPlot({
+          plot(0, type="n", axes=FALSE, ylab = "", xlab = "", main="Please select a node to generate a graph")
+        })
+        return()
+      }
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
-    } else if (input$tabset == "Set CPT") {
+    } else if (input$tabset == "Set_CPT") {
       observe({
         getSelectState(input, output)
         getSaveState(input, output)
@@ -341,8 +356,8 @@ server <- function(input, output, session) {
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
-    #Try getting parameters from 'Set CPT' else assume 'either'
-    if (input$tabset == "Set CPT") {
+    #Try getting parameters from 'Set_CPT' else assume 'either'
+    if (input$tabset == "Set_CPT") {
       responseList = vector()
       for (i in 1:length(nodesList)) {
         inputName = paste("select", as.character(i), sep = "")

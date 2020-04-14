@@ -94,7 +94,7 @@ body = dashboardBody(
         id = "graphTab",
         plotOutput("priorPlot")
       ),
-      tabPanel("Set CPT",
+      tabPanel("Set_CPT",
         id = "cptTab",
         uiOutput("selectState"),
         uiOutput("saveState")
@@ -133,5 +133,7 @@ body = dashboardBody(
 
 ui <- fluidPage(
   useShinyjs(),
+  extendShinyjs(text = jsCode, functions = c("disableTab", "enableTab")),
+  inlineCSS(css),
   dashboardPage(header, sidebar, body)
 )
