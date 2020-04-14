@@ -804,6 +804,7 @@ getVisNetwork = function(df) {
 }
 
 init = function(output) {
+  # Create and plot the network structure.
   mainData <<- cleanDataset(mainData)
   dag <<- model2network(getModString(mainData))
   edgeDf <<- getEdgeList(dag, mainData)
@@ -835,17 +836,8 @@ setwd(getwd())
 #mainData = coronary
 #coronary, asia, learning.test
 
-# mainData = cleanDataset(mainData)
 mainData = NULL
-
-#### Create Dag ####
-
-# create and plot the network structure.
-# dag = model2network(getModString(mainData))
 dag = NULL
-
-#Declare Global Variable
-# edgeDf = getEdgeList(dag, mainData)
 edgeDf = NULL
 
 
