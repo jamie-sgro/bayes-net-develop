@@ -1,25 +1,6 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
-  # observeEvent(input$fileTabNew, {
-  #   input$fileTab = "new"
-  # })
-  #
-  # observeEvent(input$fileTabSave, {
-  #   session$sendCustomMessage(
-  #     type = 'testmessage',
-  #     message = "This feature is under construction"
-  #   )
-  # })
-  #
-  # observeEvent(input$fileTabLoad, {
-  #   session$sendCustomMessage(
-  #     type = 'testmessage',
-  #     message = "This feature is under construction"
-  #   )
-  # })
-
-
   observeEvent(input$saveNetworkBtn, {
     fileName = ""
     if (input$saveNetworkSelect == "Save as new:") {
@@ -38,10 +19,8 @@ server <- function(input, output, session) {
     #   "document.getElementsByClassName('sidebar-toggle')[0].click();"
     # ))
     # shinyjs::runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-    runjs("document.getElementsByClassName('sidebar-toggle')[0].click();")
-    updateTabsetPanel(session, "tabset",
-      selected = "Network"
-    )
+    toggleSidebar()
+    setActiveTab(session, "Network")
   })
 
   observeEvent(input$loadNetworkBtn, {
@@ -77,33 +56,19 @@ server <- function(input, output, session) {
     })
   })
 
+  observeEvent(input$newCsv, {
+    if (is.null(input$newCsv)) {
+      return(NULL)
+    }
+    mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+    toggleSidebar()
+    setActiveTab(session, "Network")
+  })
+
   #setup network
   output$myNetId <- renderVisNetwork({
-    visNetwork(nameNodes(mainData), edgeDf) %>%
-      visPhysics(solver = "barnesHut",
-                 minVelocity = 0.1,
-                 forceAtlas2Based = list(gravitationalConstant = -150)) %>%
-      visOptions(manipulation = TRUE, highlightNearest = FALSE) %>%
-      visEdges(arrows = 'to') %>%
-      visEvents(type = "once", beforeDrawing = "function(init) {
-                Shiny.onInputChange('getNodeStruc','init');
-      }") %>%
-      visEvents(selectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                dragging = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                deselectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                selectEdge = "function(e) {
-                Shiny.onInputChange('current_edge_id', e.edges);
-      }") %>%
-      visEvents(click = "function(click) {
-                Shiny.onInputChange('selectNode', click.nodes)
-                Shiny.onInputChange('selectEdge', click.edges)
-      }")
+    getVisNetwork()
   })
 
 
@@ -262,8 +227,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$learnNetButton, {
-    #remove all edges
+    if (is.null(edgeDf)) {
+      return()
+    }
 
+    #remove all edges
     if (nrow(edgeDf) > 0) {
       clearChildParent()
       removeAllEdges(edgeDf, dag)
@@ -373,7 +341,7 @@ server <- function(input, output, session) {
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
-    #Try getting perameters from 'Set CPT' else assume 'either'
+    #Try getting parameters from 'Set CPT' else assume 'either'
     if (input$bodyTab == "Set CPT") {
       responseList = vector()
       for (i in 1:length(nodesList)) {
