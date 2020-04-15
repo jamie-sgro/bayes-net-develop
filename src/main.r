@@ -7,11 +7,6 @@ SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
 
-DEFAULT_LOAD_STR1 = "Default: coronary"
-DEFAULT_LOAD_DATA1 = coronary
-DEFAULT_LOAD_STR2 = "Default: asia"
-DEFAULT_LOAD_DATA2 = asia
-
 PACK_LIST = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
              "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
 
@@ -28,6 +23,11 @@ for (package in PACK_LIST) {
   checkPackage(package)
   library(package, character.only = TRUE)
 }
+
+DEFAULT_LOAD_STR1 = "Default: coronary"
+DEFAULT_LOAD_DATA1 = coronary
+DEFAULT_LOAD_STR2 = "Default: asia"
+DEFAULT_LOAD_DATA2 = asia
 
 #### Import Classes ####
 
@@ -846,4 +846,9 @@ source("./class/server.r")
 
 
 #shinyApp(ui = ui, server = server)
-runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)
+arcError = tryCatch({
+  runApp(list(ui=ui, server=server), host=getIp(LOCALHOST), port=80)
+}, error = function(e) {
+  warning("Could not run app over localhost.")
+  runApp(list(ui=ui, server=server))
+})
