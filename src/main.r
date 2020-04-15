@@ -430,6 +430,7 @@ plotPost = function(input) {
   if(is.null(input$current_node_id)) return()
 
   nodeLabel = idToLabel(input)
+  if (length(nodeLabel) == 0) return()
 
   freqTable = table(mainData[[nodeLabel]])
   success = freqTable[1]
@@ -667,6 +668,7 @@ getSelectState = function(input, output) {
   }
 
   nodeLabel = idToLabel(input)
+  if (length(nodeLabel) == 0) return()
 
   parent = nodeStruc[[nodeLabel]][["myParent"]]
 

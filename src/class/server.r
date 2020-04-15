@@ -354,6 +354,8 @@ server <- function(input, output, session) {
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+
     beta = c(values[["df"]])
 
     #Update prior list (memory)
@@ -420,6 +422,8 @@ server <- function(input, output, session) {
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+    
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
