@@ -1,36 +1,122 @@
 server <- function(input, output, session) {
   values <- reactiveValues()
 
-  #setup network
-  output$myNetId <- renderVisNetwork({
-    visNetwork(nameNodes(mainData), edgeDf) %>%
-      visPhysics(solver = "barnesHut",
-                 minVelocity = 0.1,
-                 forceAtlas2Based = list(gravitationalConstant = -150)) %>%
-      visOptions(manipulation = TRUE, highlightNearest = FALSE) %>%
-      visEdges(arrows = 'to') %>%
-      visEvents(type = "once", beforeDrawing = "function(init) {
-                Shiny.onInputChange('getNodeStruc','init');
-      }") %>%
-      visEvents(selectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                dragging = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                deselectNode = "function(n) {
-                Shiny.onInputChange('current_node_id', n.nodes);
-                }",
-                selectEdge = "function(e) {
-                Shiny.onInputChange('current_edge_id', e.edges);
-      }") %>%
-      visEvents(click = "function(click) {
-                Shiny.onInputChange('selectNode', click.nodes)
-                Shiny.onInputChange('selectEdge', click.edges)
-      }")
+  tab = Tab$new(c("File", "Network", "Graph", "Set_CPT", "Settings"))
+  tab$disable()
+
+  # Save
+  observeEvent(input$saveNetworkBtn, {
+    fileName = ""
+    if (input$saveNetworkSelect == "Save as new:") {
+      fileName = input$saveNetworkFileName
+    } else {
+      fileName = input$saveNetworkSelect
+    }
+
+    if (fileName == "") {
+      stop("Could not get valid save file name")
+      return()
+    }
+
+    save(dag, edgeDf, mainData, nodeStruc, file = paste0(SAVE_FOLDER, fileName, ".RData"))
+
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, paste("Network Saved:", fileName))
   })
 
+  # Load
+  observeEvent(input$loadNetworkBtn, {
+    fileName = input$loadNetworkSelect
+    if (fileName == "" | fileName == "Select one:") {
+      stop("Could not get valid load file name")
+      return()
+    }
 
+    if (fileName == DEFAULT_LOAD_STR1) {
+      mainData <<- DEFAULT_LOAD_DATA1
+      init(output)
+    } else if (fileName == DEFAULT_LOAD_STR2) {
+      mainData <<- DEFAULT_LOAD_DATA2
+      init(output)
+    } else {
+      tempEnv <- new.env()
+      load(paste0(SAVE_FOLDER, fileName, ".RData"), env=tempEnv)
+      mainData <<- tempEnv$mainData
+      dag <<- tempEnv$dag
+      edgeDf <<- tempEnv$edgeDf
+      nodeStruc <<- tempEnv$nodeStruc
+      
+      output$myNetId = renderVisNetwork({
+        getVisNetwork(nameNodes(mainData))
+      })
+    }
+
+
+    # update ui tabs and sidebar
+    tab$enable()
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, paste("Network Loaded:", fileName))
+  })
+
+  # Import Csv
+  observeEvent(input$newCsv, {
+    if (is.null(input$newCsv)) {
+      return(NULL)
+    }
+    mainData <<- read.csv(input$newCsv$datapath)
+    init(output)
+
+    tab$enable()
+    sidebar = Sidebar$new()
+    sidebar$expand
+    tab$setActive(session, "Network")
+
+    # screen print
+    sidebar$printActiveTextBox(input, output, "New Network Imported")
+  })
+
+  # File Controller
+  observeEvent(input$fileTabType, {
+    # Files that end with "RData" case sensitive
+    files = list.files(SAVE_FOLDER, pattern="\\.RData$")
+    if (length(files) == 0) {
+      files = c("No saved files")
+    }
+    parsedFiles = c()
+    for (file in files) {
+      # Remove .RData from file name
+      parsedFiles = c(parsedFiles, gsub(".RData", "", file))
+    }
+    output$saveNetworkSelect = renderUI({
+      selectInput(
+        "saveNetworkSelect",
+        "Select File",
+        c(parsedFiles, "Save as new:"),
+        selected = "Save as new:"
+      )
+    })
+    output$loadNetworkSelect = renderUI({
+      selectInput(
+        "loadNetworkSelect",
+        "Select File",
+        c("Select one:", parsedFiles, DEFAULT_LOAD_STR1, DEFAULT_LOAD_STR2),
+        selected = "Select one:"
+      )
+    })
+  })
+
+  #setup network
+  output$myNetId <- renderVisNetwork({
+    getVisNetwork()
+  })
 
   #update graph changes
   observe({
@@ -46,12 +132,18 @@ server <- function(input, output, session) {
 
 
   #On new tab click
-  observeEvent(input$bodyTab, {
-    if (input$bodyTab == "Graph") {
+  observeEvent(input$tabset, {
+    if (input$tabset == "Graph") {
+      if (is.null(input$current_node_id)) {
+        output$priorPlot <- renderPlot({
+          plot(0, type="n", axes=FALSE, ylab = "", xlab = "", main="Please select a node to generate a graph")
+        })
+        return()
+      }
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
-    } else if (input$bodyTab == "Set CPT") {
+    } else if (input$tabset == "Set_CPT") {
       observe({
         getSelectState(input, output)
         getSaveState(input, output)
@@ -65,7 +157,7 @@ server <- function(input, output, session) {
     clickType = getClickType(input)
 
     if (is.null(clickType)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getScore(dag, mainData))
       })
       output$hot <- renderRHandsontable({})
@@ -84,7 +176,7 @@ server <- function(input, output, session) {
       edgeIndex = which(edgeDf$id == input$myNetId_selectedEdges)
 
       #CPT radio selected
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print(getArcStrength(dag, mainData, input$netScore)[edgeIndex,])
       })
     }
@@ -112,23 +204,20 @@ server <- function(input, output, session) {
     if (cmd == "addEdge") {
       errMsg = validEdge(input$myNetId_graphChange, edgeDf)
       if (valid(errMsg)) {
-        output$shiny_return <- renderPrint({
+        output$cptTextBox = renderPrint({
           print(errMsg)
         })
         return()
       }
 
       addEdge(input, output, edgeDf)
-      updateSidbarUi(input, output, dag, mainData)
+      updateSidebarUi(input, output, dag, mainData)
       return()
     }
 
     if (cmd == "deleteElements") {
       deleteEdge(input$myNetId_graphChange, edgeDf)
 
-    #  output$shiny_return <- renderPrint({
-    #    print(getScore(dag, mainData))
-    #  })
       updateRadioButtons(session, "useType", "Select Output",
         c("CP Table", "BN Score", "Evaluate"),
         selected = "BN Score"
@@ -186,8 +275,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$learnNetButton, {
-    #remove all edges
+    if (is.null(edgeDf)) {
+      return()
+    }
 
+    #remove all edges
     if (nrow(edgeDf) > 0) {
       clearChildParent()
       removeAllEdges(edgeDf, dag)
@@ -240,27 +332,36 @@ server <- function(input, output, session) {
       }
     }
 
-    print(edgeDf)
-
     visNetworkProxy("myNetId") %>%
       visUpdateEdges(edges = edgeDf)
 
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
+  })
+
+  observeEvent(input$removeAllEdgesButton, {
+    if (nrow(edgeDf) == 0) return()
+    clearChildParent()
+    removeAllEdges(edgeDf, dag)
+    dag <<- model2network(getModString(mainData))
+    edgeDf <<- getEdgeList(dag, mainData, input$netScore)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$useType, {
-    updateSidbarUi(input, output, dag, mainData)
+    updateSidebarUi(input, output, dag, mainData)
   })
 
   observeEvent(input$savePriorButton, {
     if (is.null(input$current_node_id)) {
-      output$shiny_return <- renderPrint({
+      output$cptTextBox = renderPrint({
         print("No node selected")
       })
       return()
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+
     beta = c(values[["df"]])
 
     #Update prior list (memory)
@@ -297,8 +398,8 @@ server <- function(input, output, session) {
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
-    #Try getting perameters from 'Set CPT' else assume 'either'
-    if (input$bodyTab == "Set CPT") {
+    #Try getting parameters from 'Set_CPT' else assume 'either'
+    if (input$tabset == "Set_CPT") {
       responseList = vector()
       for (i in 1:length(nodesList)) {
         inputName = paste("select", as.character(i), sep = "")
@@ -308,14 +409,14 @@ server <- function(input, output, session) {
       responseList = generateList(length(nodesList), "Either")
     }
 
-    if (input$bodyTab == "Graph") {
+    if (input$tabset == "Graph") {
       output$priorPlot <- renderPlot({
         plotPost(input)
       })
     }
 
-    output$shiny_return <- renderPrint({
-      getMultiPosterior(nodesList, responseList, mainData)
+    output$cptTextBox = renderPrint({
+      getMultiPosterior(intput, output, nodesList, responseList, mainData)
     })
   })
 
@@ -327,6 +428,8 @@ server <- function(input, output, session) {
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
@@ -338,8 +441,8 @@ server <- function(input, output, session) {
       responseList = c(responseList, input[[inputName]])
     }
 
-    output$shiny_return <- renderPrint({
-      getMultiPosterior(nodesList, responseList, mainData)
+    output$cptTextBox = renderPrint({
+      getMultiPosterior(input, output, nodesList, responseList, mainData)
     })
   })
 
