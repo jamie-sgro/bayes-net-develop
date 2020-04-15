@@ -16,5 +16,10 @@
       ```
 
 4. manually write out `library()` without character.only i.e.
+   
    1. `library(htmlwidgets)`
+   
 5. compile all `source("some file")` files together into a single app.r. 
+
+6. I also needed to change environment for loading rdata, but that could be an artefact of compiling the source files to a single app.r file
+
