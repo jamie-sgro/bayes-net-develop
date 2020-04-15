@@ -357,7 +357,6 @@ printNodeProb = function(input, output) {
   nodeLabel = idToLabel(input)
   if (length(nodeLabel) == 0) return()
 
-  print(nodeLabel)
   parent = nodeStruc[[nodeLabel]][["myParent"]]
   nodesList = c(nodeLabel, parent)
 
