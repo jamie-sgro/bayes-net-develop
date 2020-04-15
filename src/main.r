@@ -7,40 +7,10 @@ SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
 
-#### Import Classes ####
+PACK_LIST = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
+             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
 
-source("class/Sidebar.r")
-source("class/Tab.r")
-
-
-
-# js injection to enable and disable tabs
-jsCode = "
-shinyjs.disableTab = function(name) {
-  var tab = $('.nav li a[data-value=' + name + ']');
-  tab.bind('click.tab', function(e) {
-    e.preventDefault();
-    return false;
-  });
-  tab.addClass('disabled');
-}
-
-shinyjs.enableTab = function(name) {
-  var tab = $('.nav li a[data-value=' + name + ']');
-  tab.unbind('click.tab');
-  tab.removeClass('disabled');
-}
-"
-
-css = "
-.nav li a.disabled {
-  background-color: #aaa !important;
-  color: #333 !important;
-  cursor: not-allowed !important;
-  border-color: #aaa !important;
-}"
-
-#### Functions ####
+#### Import Package ####
 
 checkPackage = function(pack) {
   if (!is.element(pack, installed.packages()[,1])) {
@@ -48,6 +18,18 @@ checkPackage = function(pack) {
                      repos = "http://cran.us.r-project.org")
   }
 }
+
+for (package in PACK_LIST) {
+  checkPackage(package)
+  library(package, character.only = TRUE)
+}
+
+#### Import Classes ####
+
+source("class/Sidebar.r")
+source("class/Tab.r")
+
+#### Functions ####
 
 cleanDataset = function(df) {
   # Force to bnlearn supported data type
@@ -824,15 +806,6 @@ init = function(output) {
   output$myNetId = renderVisNetwork({
     getVisNetwork(nameNodes(mainData))
   })
-}
-
-#### Import Package ####
-packList = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
-             "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
-
-for (package in packList) {
-  checkPackage(package)
-  library(package, character.only = TRUE)
 }
 
 #### Import Data ####

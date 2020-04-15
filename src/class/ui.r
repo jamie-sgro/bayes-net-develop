@@ -136,7 +136,7 @@ body = dashboardBody(
 
 ui <- fluidPage(
   useShinyjs(),
-  extendShinyjs(text = jsCode, functions = c("disableTab", "enableTab")),
-  inlineCSS(css),
+  extendShinyjs(text = Sidebar$new()$jsCode, functions = c("disableTab", "enableTab")),
+  inlineCSS(Sidebar$new()$css),
   dashboardPage(header, sidebar, body)
 )
