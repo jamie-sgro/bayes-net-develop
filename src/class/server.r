@@ -333,6 +333,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$removeAllEdgesButton, {
+    if (nrow(edgeDf) == 0) return()
     clearChildParent()
     removeAllEdges(edgeDf, dag)
     dag <<- model2network(getModString(mainData))
