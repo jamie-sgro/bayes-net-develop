@@ -43,7 +43,13 @@ server <- function(input, output, session) {
       mainData <<- DEFAULT_LOAD_DATA2
       init(output)
     } else {
-      load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
+      tempEnv <- new.env()
+      load(paste0(SAVE_FOLDER, fileName, ".RData"), env=tempEnv)
+      mainData <<- tempEnv$mainData
+      dag <<- tempEnv$dag
+      edgeDf <<- tempEnv$edgeDf
+      nodeStruc <<- tempEnv$nodeStruc
+      
       output$myNetId = renderVisNetwork({
         getVisNetwork(nameNodes(mainData))
       })
@@ -354,6 +360,8 @@ server <- function(input, output, session) {
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+
     beta = c(values[["df"]])
 
     #Update prior list (memory)
@@ -420,6 +428,8 @@ server <- function(input, output, session) {
     }
 
     nodeLabel = idToLabel(input)
+    if (length(nodeLabel) == 0) return()
+
     parent = nodeStruc[[nodeLabel]][["myParent"]]
     nodesList = c(nodeLabel, parent)
 
