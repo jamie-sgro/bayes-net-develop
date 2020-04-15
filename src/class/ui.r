@@ -40,7 +40,8 @@ sidebar = dashboardSidebar(
   ),
   radioButtons("useType", "Select Output", c("CP Table", "BN Score", "Evaluate")),
   actionButton("debugButton", "Freeze"),
-  actionButton("learnNetButton", "Learn Network")
+  actionButton("learnNetButton", "Learn Network"),
+  actionButton("removeAllEdgesButton", "Remove All Edges")
 )
 
 body = dashboardBody(

@@ -326,11 +326,17 @@ server <- function(input, output, session) {
       }
     }
 
-    print(edgeDf)
-
     visNetworkProxy("myNetId") %>%
       visUpdateEdges(edges = edgeDf)
 
+    updateSidebarUi(input, output, dag, mainData)
+  })
+
+  observeEvent(input$removeAllEdgesButton, {
+    clearChildParent()
+    removeAllEdges(edgeDf, dag)
+    dag <<- model2network(getModString(mainData))
+    edgeDf <<- getEdgeList(dag, mainData, input$netScore)
     updateSidebarUi(input, output, dag, mainData)
   })
 
