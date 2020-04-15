@@ -7,6 +7,11 @@ SAVE_FOLDER = "./save/"
 DEFAULT_NETSCORE = "loglik"
 DEFAULT_STRUCALGO = "hc"
 
+DEFAULT_LOAD_STR1 = "Default: coronary"
+DEFAULT_LOAD_DATA1 = coronary
+DEFAULT_LOAD_STR2 = "Default: asia"
+DEFAULT_LOAD_DATA2 = asia
+
 PACK_LIST = c("htmlwidgets", "shiny", "visNetwork", "shinydashboard",
              "rhandsontable", "bnlearn", "LearnBayes", "ROCR", "shinyjs", "R6")
 
@@ -346,25 +351,25 @@ idToLabel = function(input) {
 }
 
 printNodeProb = function(input, output) {
-  # print(nodeStruc)
-  # print(idToLabel(input))
-  if(valid(input$myNetId_nodes)) {
-    if (valid(input$current_node_id)) {
-      nodeLabel = idToLabel(input)
-      parent = nodeStruc[[nodeLabel]][["myParent"]]
-      nodesList = c(nodeLabel, parent)
+  if(is.null(input$myNetId_nodes)) return()
+  if (is.null(input$current_node_id)) return()
 
-      #compile responseList (from parents)
-      responseList = generateList(length(nodesList), "Either")
-      output$cptTextBox = renderPrint({
-        getMultiPosterior(nodesList, responseList, mainData)
-      })
-      updateSpreadsheet(nodeLabel, output)
-    }
-  }
+  nodeLabel = idToLabel(input)
+  if (length(nodeLabel) == 0) return()
+
+  print(nodeLabel)
+  parent = nodeStruc[[nodeLabel]][["myParent"]]
+  nodesList = c(nodeLabel, parent)
+
+  #compile responseList (from parents)
+  responseList = generateList(length(nodesList), "Either")
+  output$cptTextBox = renderPrint({
+    getMultiPosterior(input, output, nodesList, responseList, mainData)
+  })
+  updateSpreadsheet(input, output, nodeLabel)
 }
 
-updateSpreadsheet = function(nodeLabel, output) {
+updateSpreadsheet = function(input, output, nodeLabel) {
   if (length(nodeLabel) == 0) {
     warning("nodeLabel has a length of zero")
     return()
@@ -378,7 +383,10 @@ updateSpreadsheet = function(nodeLabel, output) {
     output$hot <- renderRHandsontable({
       #Blank
     })
-    warning("Please ensure each variable has up to two possible responses")
+    sidebar = Sidebar$new()
+    msg = "Please ensure each variable has up to two possible responses"
+    warning(msg)
+    sidebar$printActiveTextBox(input, output, msg)
     return()
   }
 
@@ -473,7 +481,7 @@ plotPost = function(input) {
          lty = c("solid", "dotted", "longdash"))
 }
 
-getMultiPosterior = function(nameList, resp, db) {
+getMultiPosterior = function(input, output, nameList, resp, db) {
   n = length(nameList)
 
   if (n != length(resp)) {
@@ -493,9 +501,9 @@ getMultiPosterior = function(nameList, resp, db) {
 
     #Check for catagorical variables
     if (length(levels(v[[i]])) > 2) {
-      output$cptTextBox = renderPrint({
-        print("Please ensure each variable has up to two possible responses")
-      })
+      sidebar = Sidebar$new()
+      msg = "Please ensure each variable has up to two possible responses"
+      sidebar$printActiveTextBox(input, output, msg)
       return()
     }
 
@@ -817,9 +825,6 @@ setwd(getwd())
 # } else {
 #   mainData = read.csv("data/hcp_dataset.csv", fileEncoding="UTF-8-BOM")
 # }
-
-#mainData = coronary
-#coronary, asia, learning.test
 
 mainData = NULL
 dag = NULL

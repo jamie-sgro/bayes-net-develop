@@ -36,10 +36,19 @@ server <- function(input, output, session) {
       return()
     }
 
-    load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
-    output$myNetId = renderVisNetwork({
-      getVisNetwork(nameNodes(mainData))
-    })
+    if (fileName == DEFAULT_LOAD_STR1) {
+      mainData <<- DEFAULT_LOAD_DATA1
+      init(output)
+    } else if (fileName == DEFAULT_LOAD_STR2) {
+      mainData <<- DEFAULT_LOAD_DATA2
+      init(output)
+    } else {
+      load(paste0(SAVE_FOLDER, fileName, ".RData"), envir = globalenv())
+      output$myNetId = renderVisNetwork({
+        getVisNetwork(nameNodes(mainData))
+      })
+    }
+
 
     # update ui tabs and sidebar
     tab$enable()
@@ -92,7 +101,7 @@ server <- function(input, output, session) {
       selectInput(
         "loadNetworkSelect",
         "Select File",
-        c(parsedFiles, "Select one:"),
+        c("Select one:", parsedFiles, DEFAULT_LOAD_STR1, DEFAULT_LOAD_STR2),
         selected = "Select one:"
       )
     })
@@ -392,7 +401,7 @@ server <- function(input, output, session) {
     }
 
     output$cptTextBox = renderPrint({
-      getMultiPosterior(nodesList, responseList, mainData)
+      getMultiPosterior(intput, output, nodesList, responseList, mainData)
     })
   })
 
@@ -416,7 +425,7 @@ server <- function(input, output, session) {
     }
 
     output$cptTextBox = renderPrint({
-      getMultiPosterior(nodesList, responseList, mainData)
+      getMultiPosterior(input, output, nodesList, responseList, mainData)
     })
   })
 
